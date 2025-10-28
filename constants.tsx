@@ -71,6 +71,66 @@ export const SIDEBAR_DATA: NavItem[] = [
   },
 ];
 
+// NFe Dynamic Tax Fields
+const ALL_ICMS_FIELDS: { [key: string]: Parameter } = {
+  origem: { name: 'origem', type: 'integer', required: true, description: 'Origem da mercadoria (0-Nacional, 1-Estrangeira, etc.).', defaultValue: 0 },
+  baseCalculo: { name: 'baseCalculo', type: 'number', description: 'Valor da base de cálculo do ICMS.', defaultValue: 0 },
+  aliquota: { name: 'aliquota', type: 'number', description: 'Alíquota do imposto (%).', defaultValue: 0 },
+  percentualReducaoBaseCalculo: { name: 'percentualReducaoBaseCalculo', type: 'number', description: 'Percentual de redução da base de cálculo (%).', defaultValue: 0 },
+  modalidadeBaseCalculoST: { name: 'modalidadeBaseCalculoST', type: 'integer', description: 'Modalidade de determinação da BC do ICMS ST (0-Preço tabelado, 1-Lista Negativa, 2-Lista Positiva, 3-Lista Neutra, 4-MVA, 5-Pauta).', defaultValue: 4 },
+  percentualMargemValorAdicionadoST: { name: 'percentualMargemValorAdicionadoST', type: 'number', description: 'Percentual da margem de valor Adicionado do ICMS ST (%).', defaultValue: 0 },
+  percentualReducaoBaseCalculoST: { name: 'percentualReducaoBaseCalculoST', type: 'number', description: 'Percentual de redução da BC do ICMS ST (%).', defaultValue: 0 },
+  baseCalculoST: { name: 'baseCalculoST', type: 'number', description: 'Valor da BC do ICMS ST.', defaultValue: 0 },
+  aliquotaST: { name: 'aliquotaST', type: 'number', description: 'Alíquota do ICMS ST (%).', defaultValue: 0 },
+  valorST: { name: 'valorST', type: 'number', description: 'Valor do ICMS ST.', defaultValue: 0 },
+};
+
+const ALL_PIS_COFINS_FIELDS: { [key: string]: Parameter } = {
+  baseCalculo: { name: 'baseCalculo', type: 'number', description: 'Valor da base de cálculo do PIS/COFINS.', defaultValue: 0 },
+  aliquota: { name: 'aliquota', type: 'number', description: 'Alíquota do imposto (em %).', defaultValue: 0 },
+  valor: { name: 'valor', type: 'number', description: 'Valor do PIS/COFINS (R$).', defaultValue: 0 },
+  aliquotaST: { name: 'aliquotaST', type: 'number', description: 'Alíquota do PIS/COFINS ST (em %).', defaultValue: 0 },
+  valorST: { name: 'valorST', type: 'number', description: 'Valor do PIS/COFINS ST (R$).', defaultValue: 0 },
+};
+
+export const ICMS_CST_MAP: { [key: string]: string[] } = {
+  '00': ['origem', 'baseCalculo', 'aliquota'],
+  '10': ['origem', 'baseCalculo', 'aliquota', 'modalidadeBaseCalculoST', 'percentualMargemValorAdicionadoST', 'percentualReducaoBaseCalculoST', 'baseCalculoST', 'aliquotaST', 'valorST'],
+  '20': ['origem', 'baseCalculo', 'aliquota', 'percentualReducaoBaseCalculo'],
+  '30': ['origem', 'modalidadeBaseCalculoST', 'percentualMargemValorAdicionadoST', 'percentualReducaoBaseCalculoST', 'baseCalculoST', 'aliquotaST', 'valorST'],
+  '40': ['origem'],
+  '41': ['origem'],
+  '50': ['origem'],
+  '51': ['origem', 'baseCalculo', 'aliquota', 'percentualReducaoBaseCalculo'],
+  '60': ['origem'],
+  '70': ['origem', 'baseCalculo', 'aliquota', 'modalidadeBaseCalculoST', 'percentualMargemValorAdicionadoST', 'percentualReducaoBaseCalculoST', 'baseCalculoST', 'aliquotaST', 'valorST'],
+  '90': ['origem', 'baseCalculo', 'aliquota', 'percentualReducaoBaseCalculo', 'modalidadeBaseCalculoST', 'percentualMargemValorAdicionadoST', 'percentualReducaoBaseCalculoST', 'baseCalculoST', 'aliquotaST', 'valorST'],
+  // Simples Nacional
+  '101': ['origem'],
+  '102': ['origem'],
+  '103': ['origem'],
+  '201': ['origem', 'modalidadeBaseCalculoST', 'percentualMargemValorAdicionadoST', 'percentualReducaoBaseCalculoST', 'baseCalculoST', 'aliquotaST', 'valorST'],
+  '202': ['origem', 'modalidadeBaseCalculoST', 'percentualMargemValorAdicionadoST', 'percentualReducaoBaseCalculoST', 'baseCalculoST', 'aliquotaST', 'valorST'],
+  '203': ['origem', 'modalidadeBaseCalculoST', 'percentualMargemValorAdicionadoST', 'percentualReducaoBaseCalculoST', 'baseCalculoST', 'aliquotaST', 'valorST'],
+  '500': ['origem'],
+  '900': ['origem', 'baseCalculo', 'aliquota', 'percentualReducaoBaseCalculo', 'modalidadeBaseCalculoST', 'percentualMargemValorAdicionadoST', 'percentualReducaoBaseCalculoST', 'baseCalculoST', 'aliquotaST', 'valorST'],
+};
+
+export const PIS_COFINS_CST_MAP: { [key: string]: string[] } = {
+    '01': ['baseCalculo', 'aliquota'],
+    '02': ['baseCalculo', 'aliquota'],
+    '03': ['valor', 'aliquota'],
+    '04': [],
+    '05': [],
+    '06': [],
+    '07': [],
+    '08': [],
+    '09': [],
+    '49': [],
+    '50': ['baseCalculoST', 'aliquotaST', 'valorST'],
+    '99': ['baseCalculo', 'aliquota'],
+};
+
 export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
   visaoGeral: {
     id: 'visaoGeral',
@@ -162,18 +222,12 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
                   icms: {
                       situacaoTributaria: "102",
                       origem: 0,
-                      baseCalculo: 0,
-                      aliquota: 0,
                   },
                   pis: {
                       situacaoTributaria: "07",
-                      baseCalculo: 0,
-                      aliquota: 0
                   },
                   cofins: {
                       situacaoTributaria: "07",
-                      baseCalculo: 0,
-                      aliquota: 0,
                   }
               }
             }],
@@ -199,31 +253,30 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
                         name: 'icms',
                         type: 'object',
                         description: 'Imposto sobre Circulação de Mercadorias e Serviços.',
+                        dynamicChildrenKey: 'ICMS_CST_MAP',
                         children: [
-                          { name: 'situacaoTributaria', type: 'string', required: true, description: 'Código de Situação Tributária do ICMS.' },
-                          { name: 'origem', type: 'integer', required: true, description: 'Origem da mercadoria.' },
-                          { name: 'baseCalculo', type: 'number', description: 'Valor da base de cálculo do ICMS.' },
-                          { name: 'aliquota', type: 'number', description: 'Alíquota do imposto.' },
+                          { name: 'situacaoTributaria', type: 'string', required: true, description: 'Código de Situação Tributária do ICMS.', isDynamicTrigger: true, defaultValue: '102', options: Object.keys(ICMS_CST_MAP).map(key => ({value: key, label: key})) },
+                          ...Object.values(ALL_ICMS_FIELDS)
                         ]
                     },
                     {
                         name: 'pis',
                         type: 'object',
                         description: 'Programa de Integração Social.',
+                        dynamicChildrenKey: 'PIS_COFINS_CST_MAP',
                         children: [
-                             { name: 'situacaoTributaria', type: 'string', required: true, description: 'Código de Situação Tributária do PIS.' },
-                             { name: 'baseCalculo', type: 'number', description: 'Valor da base de cálculo do PIS.' },
-                             { name: 'aliquota', type: 'number', description: 'Alíquota do imposto (em %).' },
+                            { name: 'situacaoTributaria', type: 'string', required: true, description: 'Código de Situação Tributária do PIS.', isDynamicTrigger: true, defaultValue: '07', options: Object.keys(PIS_COFINS_CST_MAP).map(key => ({value: key, label: key})) },
+                            ...Object.values(ALL_PIS_COFINS_FIELDS)
                         ]
                     },
                     {
                         name: 'cofins',
                         type: 'object',
                         description: 'Contribuição para o Financiamento da Seguridade Social.',
+                        dynamicChildrenKey: 'PIS_COFINS_CST_MAP',
                         children: [
-                            { name: 'situacaoTributaria', type: 'string', required: true, description: 'Código de Situação Tributária do COFINS.' },
-                            { name: 'baseCalculo', type: 'number', description: 'Valor da base de cálculo do COFINS.' },
-                            { name: 'aliquota', type: 'number', description: 'Alíquota do imposto (em %).' },
+                            { name: 'situacaoTributaria', type: 'string', required: true, description: 'Código de Situação Tributária do COFINS.', isDynamicTrigger: true, defaultValue: '07', options: Object.keys(PIS_COFINS_CST_MAP).map(key => ({value: key, label: key})) },
+                            ...Object.values(ALL_PIS_COFINS_FIELDS)
                         ]
                     },
                 ]

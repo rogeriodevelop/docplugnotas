@@ -11,6 +11,10 @@ export interface Parameter {
   description: string;
   children?: Parameter[];
   defaultValue?: any;
+  // New fields for dynamic rendering
+  options?: { value: string; label: string }[];
+  isDynamicTrigger?: boolean;
+  dynamicChildrenKey?: string; // e.g., 'ICMS_CST_MAP'
 }
 
 export interface ResponseItem {

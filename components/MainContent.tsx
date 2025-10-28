@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import type { ApiEndpointDetails, Parameter, ResponseItem } from '../types';
 import { LinkIcon, CheckIcon, RefreshIcon } from './icons/Icons';
-import { generateInitialBody } from '../constants';
+import { generateInitialBody, ICMS_CST_MAP, PIS_COFINS_CST_MAP } from '../constants';
+
+const DYNAMIC_MAPS: { [key: string]: any } = {
+  ICMS_CST_MAP,
+  PIS_COFINS_CST_MAP,
+};
 
 interface MainContentProps {
   content: ApiEndpointDetails;
@@ -25,12 +30,23 @@ const MethodBadge: React.FC<{ method: string }> = ({ method }) => {
   );
 };
 
-const InputField: React.FC<{ type: string, value: any, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }> = ({ type, value, onChange }) => {
+const InputField: React.FC<{ param: Parameter, value: any, onChange: (e: React.ChangeEvent<any>) => void }> = ({ param, value, onChange }) => {
   const commonClasses = "w-full bg-dark-surface border border-dark-border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-dark-accent";
-  switch (type) {
+  
+  if(param.options) {
+    return (
+        <select value={value || ''} onChange={onChange} className={`${commonClasses} pr-8`}>
+            {param.options.map(option => (
+                <option key={option.value} value={option.value}>{option.label || option.value}</option>
+            ))}
+        </select>
+    );
+  }
+
+  switch (param.type) {
     case 'integer':
     case 'number':
-      return <input type="number" value={value || ''} onChange={onChange} className={commonClasses} />;
+      return <input type="number" value={value === null || value === undefined ? '' : value} onChange={onChange} className={commonClasses} />;
     case 'boolean':
       return (
         <div className="flex items-center h-full">
@@ -40,34 +56,111 @@ const InputField: React.FC<{ type: string, value: any, onChange: (e: React.Chang
     case 'array[string]':
         return <textarea value={Array.isArray(value) ? value.join('\n') : ''} onChange={onChange} className={`${commonClasses} min-h-[60px]`} placeholder="Um valor por linha..."/>
     default:
-      if (value?.length > 80) {
+      if (typeof value === 'string' && value.length > 80) {
         return <textarea value={value || ''} onChange={onChange} className={`${commonClasses} min-h-[80px]`} />;
       }
       return <input type="text" value={value || ''} onChange={onChange} className={commonClasses} />;
   }
 }
 
-const ParameterRow: React.FC<{ param: Parameter; level: number; path: (string | number)[], value: any; onValueChange: (path: (string | number)[], value: any) => void; }> = ({ param, level, path, value, onValueChange }) => {
+const ParameterRow: React.FC<{ 
+    param: Parameter; 
+    level: number; 
+    path: (string | number)[];
+    value: any; 
+    onValueChange: (path: (string | number)[], value: any, triggerInfo?: any) => void;
+    parentParam?: Parameter | null;
+}> = ({ param, level, path, value, onValueChange, parentParam = null }) => {
   const isObjectOrArray = param.children && param.children.length > 0;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     let val: any;
     if (e.target.type === 'checkbox') {
         val = (e.target as HTMLInputElement).checked;
     } else if(e.target.type === 'number') {
-        val = parseFloat(e.target.value);
-        if(isNaN(val)) val = null;
+        val = e.target.value === '' ? null : parseFloat(e.target.value);
     } else if(param.type === 'array[string]') {
         val = e.target.value.split('\n').filter(s => s);
     } else {
         val = e.target.value;
     }
-    onValueChange(path, val);
+    
+    let triggerInfo = null;
+    if (param.isDynamicTrigger && parentParam?.dynamicChildrenKey) {
+        triggerInfo = {
+            parentPath: path.slice(0, -1),
+            dynamicMap: DYNAMIC_MAPS[parentParam.dynamicChildrenKey],
+            triggerKey: param.name,
+            parentChildren: parentParam.children
+        };
+    }
+
+    onValueChange(path, val, triggerInfo);
   };
+
+  const renderChildren = () => {
+    let childrenToRender = param.children || [];
+    
+    if (param.dynamicChildrenKey && value) {
+        const triggerChild = param.children?.find(c => c.isDynamicTrigger);
+        if (triggerChild) {
+            const triggerValue = value[triggerChild.name];
+            const fieldMap = DYNAMIC_MAPS[param.dynamicChildrenKey];
+            if (fieldMap && triggerValue) {
+                const visibleFieldNames = fieldMap[triggerValue] || [];
+                childrenToRender = param.children?.filter(
+                    child => child.isDynamicTrigger || visibleFieldNames.includes(child.name)
+                ) || [];
+            }
+        }
+    }
+
+    if (param.type === 'object') {
+      return (
+        <div className="border-l border-dark-border/30 ml-4">
+          {childrenToRender.map((child) => (
+            <ParameterRow 
+              key={child.name} 
+              param={child} 
+              level={level + 1}
+              path={[...path, child.name]}
+              value={value ? value[child.name] : undefined}
+              onValueChange={onValueChange}
+              parentParam={param}
+            />
+          ))}
+        </div>
+      );
+    }
+    
+    if (param.type === 'array' && Array.isArray(value)) {
+      return (
+        <div className="border-l border-dark-border/30 ml-4 pl-4 pt-2">
+          {value.map((item, index) => (
+            <div key={index} className="mb-4 p-3 border border-dark-border/50 rounded-lg bg-dark-surface/30">
+              <p className="text-xs font-semibold text-dark-text-secondary mb-2">Item {index + 1}</p>
+              {childrenToRender.map(childParam => (
+                <ParameterRow 
+                  key={childParam.name}
+                  param={childParam}
+                  level={level + 1}
+                  path={[...path, index, childParam.name]}
+                  value={item ? item[childParam.name] : undefined}
+                  onValueChange={onValueChange}
+                  parentParam={param}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  }
   
   return (
     <>
-      <div style={{ paddingLeft: `${level * 20}px` }} className={`py-3 ${level > 0 ? '' : 'border-t'} border-b border-dark-border/50`}>
+      <div style={{ paddingLeft: `${level * 20}px` }} className={`py-3 ${level > 0 ? '' : ''} border-b border-dark-border/50`}>
         <div className="flex justify-between items-start gap-4">
           <div className="flex-shrink-0 w-1/3 pr-2">
             <span className="font-mono text-sm break-words">{param.name}</span>
@@ -76,48 +169,11 @@ const ParameterRow: React.FC<{ param: Parameter; level: number; path: (string | 
           </div>
           <div className="flex-grow w-2/3">
             <p className="text-sm text-dark-text-secondary mb-2" dangerouslySetInnerHTML={{ __html: param.description }} />
-            {!isObjectOrArray && <InputField type={param.type} value={value} onChange={handleChange} />}
+            {!isObjectOrArray && <InputField param={param} value={value} onChange={handleChange} />}
           </div>
         </div>
       </div>
-
-      {param.type === 'object' && isObjectOrArray && (
-         <div className="border-l border-dark-border/30 ml-4">
-             {param.children?.map((child) => (
-                 <ParameterRow 
-                    key={child.name} 
-                    param={child} 
-                    level={level + 1}
-                    path={[...path, child.name]}
-                    value={value ? value[child.name] : undefined}
-                    onValueChange={onValueChange}
-                />
-             ))}
-         </div>
-      )}
-      {param.type === 'array' && isObjectOrArray && value && Array.isArray(value) && (
-         <div className="border-l border-dark-border/30 ml-4 pl-4 pt-2">
-             {value.map((item, index) => (
-                 <div key={index} className="mb-4 p-3 border border-dark-border/50 rounded-lg bg-dark-surface/30">
-                    <p className="text-xs font-semibold text-dark-text-secondary mb-2">Item {index + 1}</p>
-                     {param.children?.map(childParam => {
-                        const childPath = [...path, index, childParam.name];
-                        const childValue = item ? item[childParam.name] : undefined;
-                        return (
-                          <ParameterRow 
-                            key={childParam.name}
-                            param={childParam}
-                            level={level + 1}
-                            path={childPath}
-                            value={childValue}
-                            onValueChange={onValueChange}
-                          />
-                        )
-                     })}
-                 </div>
-             ))}
-         </div>
-      )}
+      {isObjectOrArray && renderChildren()}
     </>
   );
 };
@@ -138,19 +194,41 @@ const ParametersTable: React.FC<{title: string, params: Parameter[], requestBody
     
     const bodyParams = params.find(p => p.name === 'Body');
 
-    const handleBodyChange = (path: (string | number)[], value: any) => {
+    const handleBodyChange = (path: (string | number)[], value: any, triggerInfo: any = null) => {
       onBodyChange((prevBody: any) => {
         const newBody = JSON.parse(JSON.stringify(prevBody)); // Deep copy
         let current = newBody;
         for (let i = 0; i < path.length - 1; i++) {
           if (current[path[i]] === undefined) {
-             // Create path if it doesn't exist
              if(typeof path[i+1] === 'number') current[path[i]] = [];
              else current[path[i]] = {};
           }
           current = current[path[i]];
         }
         current[path[path.length - 1]] = value;
+
+        if (triggerInfo) {
+            const { parentPath, dynamicMap, triggerKey, parentChildren } = triggerInfo;
+            
+            let parentObject = newBody;
+            parentPath.forEach(p => { parentObject = parentObject[p] || {}; });
+            
+            const validKeys = dynamicMap[value] || [];
+            const keysToKeep = new Set([...validKeys, triggerKey]);
+            
+            for (const key in parentObject) {
+                if (!keysToKeep.has(key)) {
+                    delete parentObject[key];
+                }
+            }
+            
+            parentChildren.forEach((child: Parameter) => {
+              if(validKeys.includes(child.name) && parentObject[child.name] === undefined) {
+                 parentObject[child.name] = child.defaultValue;
+              }
+            });
+        }
+
         return newBody;
       });
     };
@@ -162,13 +240,17 @@ const ParametersTable: React.FC<{title: string, params: Parameter[], requestBody
           <div className="flex justify-between items-center border-b border-dark-border pb-2 mb-4">
             <h3 className="text-xl font-semibold text-white">{title}</h3>
             <button 
-              onClick={() => onBodyChange(generateInitialBody(bodyParams.children || []))}
+              onClick={() => {
+                 const initialBody = generateInitialBody(bodyParams.children || []);
+                 const cleanedBody = (window as any).cleanupDynamicBody(initialBody, bodyParams.children || [], DYNAMIC_MAPS)
+                 onBodyChange(initialBody); // Re-run cleanup on reset
+              }}
               className="flex items-center text-sm text-dark-text-secondary hover:text-white transition-colors px-2 py-1 rounded-md hover:bg-dark-surface">
               <RefreshIcon className="w-4 h-4 mr-2"/>
               Resetar
             </button>
           </div>
-          <div>
+          <div className="border-t border-dark-border/50">
             {bodyParams.children.map((param) => (
               <ParameterRow 
                 key={param.name} 
@@ -189,6 +271,53 @@ const MainContent: React.FC<MainContentProps> = ({ content, requestBody, onBodyC
   const [pathCopied, setPathCopied] = useState(false);
   const [activeResponseCode, setActiveResponseCode] = useState<string>(content.responses[0]?.code || '');
   
+  useEffect(() => {
+    // Expose cleanup function globally for reset button, not ideal but works for this structure
+    (window as any).cleanupDynamicBody = (body: any, params: Parameter[], maps: { [key: string]: any }): any => {
+        if (!body) return body;
+        const newBody = JSON.parse(JSON.stringify(body));
+        const traverseAndClean = (currentBody: any, currentParams: Parameter[]) => {
+            if (!currentBody || !currentParams) return;
+            currentParams.forEach(param => {
+                if (param.dynamicChildrenKey && param.children && currentBody[param.name]) {
+                    const trigger = param.children.find(p => p.isDynamicTrigger);
+                    if (trigger && currentBody[param.name][trigger.name]) {
+                        const triggerValue = currentBody[param.name][trigger.name];
+                        const map = maps[param.dynamicChildrenKey];
+                        const validKeys = new Set([...(map[triggerValue] || []), trigger.name]);
+                        const dynamicObject = currentBody[param.name];
+                        for (const key in dynamicObject) {
+                            if (!validKeys.has(key)) {
+                                delete dynamicObject[key];
+                            }
+                        }
+                    }
+                } else if (param.children && currentBody[param.name]) {
+                    if (Array.isArray(currentBody[param.name])) {
+                        currentBody[param.name].forEach((item: any) => traverseAndClean(item, param.children!));
+                    } else {
+                        traverseAndClean(currentBody[param.name], param.children);
+                    }
+                }
+            });
+        };
+        traverseAndClean(newBody, params);
+        return newBody;
+    };
+
+    const bodyParams = content.parameters.find(p => p.name === 'Body');
+    if (bodyParams?.children) {
+      const initialBody = generateInitialBody(bodyParams.children);
+      const cleanedBody = (window as any).cleanupDynamicBody(initialBody, bodyParams.children, DYNAMIC_MAPS);
+      onBodyChange(cleanedBody);
+    }
+
+    return () => {
+      delete (window as any).cleanupDynamicBody;
+    }
+  }, [content, onBodyChange]);
+
+
   useEffect(() => {
     if (content.responses && content.responses.length > 0) {
         setActiveResponseCode(content.responses[0].code);
@@ -220,9 +349,7 @@ const MainContent: React.FC<MainContentProps> = ({ content, requestBody, onBodyC
 
         <p className="text-dark-text-secondary leading-relaxed" dangerouslySetInnerHTML={{__html: content.description}} />
         
-        {/* We won't render headers as an interactive table for now */}
-        
-        {content.parameters && content.parameters.length > 0 && 
+        {content.parameters && content.parameters.length > 0 && content.parameters.some(p => p.name === 'Body') &&
             <ParametersTable 
                 title="Parâmetros" 
                 params={content.parameters} 

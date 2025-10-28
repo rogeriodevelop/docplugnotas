@@ -3,8 +3,50 @@ import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import CodeSnippets from './components/CodeSnippets';
 import Header from './components/Header';
-import { API_CONTENT_DATA, CODE_SNIPPETS_DATA, SIDEBAR_DATA, generateInitialBody } from './constants';
-import type { ApiEndpointDetails, CodeExample, NavItem } from './types';
+import { API_CONTENT_DATA, CODE_SNIPPETS_DATA, SIDEBAR_DATA, generateInitialBody, ICMS_CST_MAP, PIS_COFINS_CST_MAP } from './constants';
+import type { ApiEndpointDetails, CodeExample, NavItem, Parameter } from './types';
+
+const DYNAMIC_MAPS: { [key: string]: any } = {
+  ICMS_CST_MAP,
+  PIS_COFINS_CST_MAP,
+};
+
+const cleanupDynamicBody = (body: any, params: Parameter[], maps: { [key: string]: any }): any => {
+    if (!body) return body;
+    const newBody = JSON.parse(JSON.stringify(body));
+
+    const traverseAndClean = (currentBody: any, currentParams: Parameter[]) => {
+        if (!currentBody || !currentParams) return;
+
+        currentParams.forEach(param => {
+            if (param.dynamicChildrenKey && param.children && currentBody[param.name]) {
+                const trigger = param.children.find(p => p.isDynamicTrigger);
+                if (trigger && currentBody[param.name][trigger.name]) {
+                    const triggerValue = currentBody[param.name][trigger.name];
+                    const map = maps[param.dynamicChildrenKey];
+                    const validKeys = new Set([...(map[triggerValue] || []), trigger.name]);
+
+                    const dynamicObject = currentBody[param.name];
+                    for (const key in dynamicObject) {
+                        if (!validKeys.has(key)) {
+                            delete dynamicObject[key];
+                        }
+                    }
+                }
+            } else if (param.children && currentBody[param.name]) {
+                if (Array.isArray(currentBody[param.name])) {
+                    currentBody[param.name].forEach((item: any) => traverseAndClean(item, param.children!));
+                } else {
+                    traverseAndClean(currentBody[param.name], param.children);
+                }
+            }
+        });
+    };
+
+    traverseAndClean(newBody, params);
+    return newBody;
+};
+
 
 const App: React.FC = () => {
   const [activeEndpointId, setActiveEndpointId] = useState<string>('addNFe');
@@ -17,7 +59,9 @@ const App: React.FC = () => {
   useEffect(() => {
     const bodyParams = activeContent.parameters.find(p => p.name === 'Body');
     if (bodyParams && bodyParams.children) {
-      setRequestBody(generateInitialBody(bodyParams.children));
+      const initialBody = generateInitialBody(bodyParams.children);
+      const cleanedBody = cleanupDynamicBody(initialBody, bodyParams.children, DYNAMIC_MAPS);
+      setRequestBody(cleanedBody);
     } else {
       setRequestBody({});
     }
