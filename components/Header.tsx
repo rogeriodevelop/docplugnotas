@@ -1,11 +1,19 @@
 import React from 'react';
+import { MenuIcon, CodeBracketIcon } from './icons/Icons';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+    onMenuClick: () => void;
+    onCodeClick: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onMenuClick, onCodeClick }) => {
   return (
     <header className="bg-dark-surface border-b border-dark-border px-4 py-2 flex items-center justify-between z-10">
-      <div className="flex items-center space-x-8">
+      <div className="flex items-center space-x-4">
+        <button onClick={onMenuClick} className="md:hidden text-dark-text-secondary hover:text-white">
+          <MenuIcon className="w-6 h-6" />
+        </button>
         <div className="flex items-center space-x-2">
-           {/* Using a simple text logo */}
           <span className="text-xl font-bold text-white">PlugNotas</span>
         </div>
         <nav className="hidden md:flex items-center space-x-6 text-sm">
@@ -15,8 +23,11 @@ const Header: React.FC = () => {
         </nav>
       </div>
       <div className="flex items-center space-x-4">
-        <button className="px-4 py-1.5 text-sm font-semibold bg-dark-accent text-white rounded-md hover:bg-blue-600 transition-colors">
+        <button className="hidden sm:block px-4 py-1.5 text-sm font-semibold bg-dark-accent text-white rounded-md hover:bg-blue-600 transition-colors">
           Comece agora
+        </button>
+        <button onClick={onCodeClick} className="lg:hidden text-dark-text-secondary hover:text-white">
+            <CodeBracketIcon className="w-6 h-6" />
         </button>
       </div>
     </header>

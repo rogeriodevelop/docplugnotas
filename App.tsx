@@ -52,6 +52,8 @@ const App: React.FC = () => {
   const [activeEndpointId, setActiveEndpointId] = useState<string>('addNFe');
   const [searchTerm, setSearchTerm] = useState('');
   const [requestBody, setRequestBody] = useState<any>({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCodeSnippetsOpen, setIsCodeSnippetsOpen] = useState(false);
 
   const activeContent: ApiEndpointDetails = API_CONTENT_DATA[activeEndpointId] || API_CONTENT_DATA['addNFe'];
   const activeSnippets: CodeExample[] = CODE_SNIPPETS_DATA[activeEndpointId] || CODE_SNIPPETS_DATA['addNFe'];
@@ -98,7 +100,10 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-full">
-      <Header />
+      <Header 
+        onMenuClick={() => setIsSidebarOpen(true)}
+        onCodeClick={() => setIsCodeSnippetsOpen(true)}
+      />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar 
           sidebarData={filteredSidebarData}
@@ -106,10 +111,12 @@ const App: React.FC = () => {
           setActiveEndpointId={setActiveEndpointId}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
         <div className="flex flex-1 overflow-hidden">
           <MainContent 
-            key={activeEndpointId} // Add key to force re-mount and reset state on endpoint change
+            key={activeEndpointId} 
             content={activeContent} 
             requestBody={requestBody}
             onBodyChange={setRequestBody}
@@ -117,9 +124,18 @@ const App: React.FC = () => {
           <CodeSnippets 
             snippets={activeSnippets}
             requestBody={requestBody}
+            isOpen={isCodeSnippetsOpen}
+            onClose={() => setIsCodeSnippetsOpen(false)}
           />
         </div>
       </div>
+      {/* Backdrop for mobile sidebar */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-10 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
     </div>
   );
 };

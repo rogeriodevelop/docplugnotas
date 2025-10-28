@@ -9,6 +9,8 @@ interface SidebarProps {
   setActiveEndpointId: (id: string) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const sectionIcons: { [key: string]: React.ReactNode } = {
@@ -21,7 +23,7 @@ const sectionIcons: { [key: string]: React.ReactNode } = {
   webhooks: <WebhookIcon className="w-4 h-4 mr-3 text-dark-text-secondary" />,
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ sidebarData, activeEndpointId, setActiveEndpointId, searchTerm, setSearchTerm }) => {
+const Sidebar: React.FC<SidebarProps> = ({ sidebarData, activeEndpointId, setActiveEndpointId, searchTerm, setSearchTerm, isOpen, onClose }) => {
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['nfe']));
 
   useEffect(() => {
@@ -43,6 +45,11 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarData, activeEndpointId, setAct
       });
     }
   }, [activeEndpointId]);
+
+  const handleItemClick = (id: string) => {
+    setActiveEndpointId(id);
+    onClose(); // Close sidebar on mobile after navigation
+  };
 
   const toggleSection = (id: string) => {
     setOpenSections(prev => {
@@ -86,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarData, activeEndpointId, setAct
       <a
         key={item.id}
         href="#"
-        onClick={(e) => { e.preventDefault(); setActiveEndpointId(item.id); }}
+        onClick={(e) => { e.preventDefault(); handleItemClick(item.id); }}
         className={`block py-1.5 px-2 text-sm transition-colors rounded-r-md ${
           isActive 
             ? 'text-dark-accent border-l-2 border-dark-accent bg-dark-accent/10' 
@@ -99,7 +106,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarData, activeEndpointId, setAct
   };
 
   return (
-    <aside className="w-72 min-w-[288px] bg-dark-surface border-r border-dark-border p-4 flex flex-col">
+    <aside className={`w-72 min-w-[288px] bg-dark-surface border-r border-dark-border p-4 flex flex-col transform transition-transform md:translate-x-0 md:relative fixed inset-y-0 left-0 z-20 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="relative mb-4">
         <input
           type="text"

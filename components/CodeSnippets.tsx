@@ -5,9 +5,11 @@ import { CopyIcon, CheckIcon, ChevronDownIcon } from './icons/Icons';
 interface CodeSnippetsProps {
   snippets: CodeExample[];
   requestBody: any;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const CodeSnippets: React.FC<CodeSnippetsProps> = ({ snippets, requestBody }) => {
+const CodeSnippets: React.FC<CodeSnippetsProps> = ({ snippets, requestBody, isOpen, onClose }) => {
   const [activeLang, setActiveLang] = useState(snippets[0]?.language || '');
   const [copied, setCopied] = useState(false);
 
@@ -22,7 +24,6 @@ const CodeSnippets: React.FC<CodeSnippetsProps> = ({ snippets, requestBody }) =>
 
   const activeSnippet = snippets.find(s => s.language === activeLang);
   
-  // Generate the code string by calling the function
   const codeToShow = activeSnippet ? activeSnippet.code(requestBody) : '';
 
   const handleCopy = () => {
@@ -35,14 +36,15 @@ const CodeSnippets: React.FC<CodeSnippetsProps> = ({ snippets, requestBody }) =>
 
   if (!snippets || snippets.length === 0) {
     return (
-       <aside className="w-96 min-w-[384px] bg-dark-code-bg flex flex-col items-center justify-center text-dark-text-secondary p-4">
+       <aside className="w-96 min-w-[384px] bg-dark-code-bg hidden lg:flex flex-col items-center justify-center text-dark-text-secondary p-4">
           <p>Nenhum exemplo de código disponível.</p>
        </aside>
     );
   }
 
   return (
-    <aside className="w-96 min-w-[384px] bg-dark-code-bg flex flex-col overflow-hidden">
+    <aside className={`w-96 min-w-[384px] bg-dark-code-bg flex flex-col overflow-hidden transition-transform transform fixed inset-y-0 right-0 z-20 lg:relative lg:translate-x-0 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        {isOpen && <div className="lg:hidden fixed inset-0 bg-black/50 z-10" onClick={onClose}></div>}
       <div className="flex items-center justify-between p-3 border-b border-dark-border">
         <div className="relative">
            <select
