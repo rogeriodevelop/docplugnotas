@@ -1,0 +1,5 @@
+{
+  "name": "PlugNotas API Docs Clone",
+  "description": "A high-fidelity clone of the PlugNotas API documentation website, demonstrating a complex three-column layout with interactive components for browsing API endpoints and viewing code samples.",
+  "requestFramePermissions": []
+}
