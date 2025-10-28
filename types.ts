@@ -15,6 +15,7 @@ export interface Parameter {
   options?: { value: string; label: string }[];
   isDynamicTrigger?: boolean;
   dynamicChildrenKey?: string; // e.g., 'ICMS_CST_MAP'
+  isManipulableArray?: boolean;
 }
 
 export interface ResponseItem {

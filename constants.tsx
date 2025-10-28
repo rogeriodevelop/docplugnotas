@@ -205,6 +205,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de itens da nota.',
+            isManipulableArray: true,
             defaultValue: [{
               numero: 1,
               codigo: "001",
@@ -287,6 +288,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             name: 'pagamentos',
             type: 'array',
             description: 'Lista de formas de pagamento.',
+            isManipulableArray: true,
             defaultValue: [{
                 forma: "01",
                 valor: 10.50,
@@ -630,6 +632,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista com os dados do pagamento.',
+            isManipulableArray: true,
              defaultValue: [{
                 forma: "03",
                 valor: 50.00,
@@ -650,6 +653,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de itens da nota.',
+            isManipulableArray: true,
             defaultValue: [{
                 codigo: "P001",
                 descricao: "PRODUTO 1 NFC-E",
@@ -835,6 +839,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de municípios de carregamento.',
+            isManipulableArray: true,
             defaultValue: [{ codigo: "4115200", nome: "Maringá" }],
             children: [
               { name: 'codigo', type: 'string', required: true, description: 'Código IBGE do município.' },
@@ -859,6 +864,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             name: 'veiculoReboque',
             type: 'array',
             description: 'Dados dos veículos reboque, se houver.',
+            isManipulableArray: true,
             defaultValue: [],
             children: [
                 { name: 'placa', type: 'string', required: true, description: 'Placa do veículo.' },
@@ -871,6 +877,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de condutores do veículo.',
+            isManipulableArray: true,
             defaultValue: [{ nome: "JOAO DA SILVA", cpf: "12345678901" }],
             children: [
                 { name: 'nome', type: 'string', required: true, description: 'Nome do condutor.' },
@@ -882,6 +889,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Documentos fiscais transportados.',
+            isManipulableArray: true,
             defaultValue: [{ chaveNFe: "41000000000000000000000000000000000000000001", segundoCodigoBarras: "" }],
             children: [
                 { name: 'chaveNFe', type: 'string', required: true, description: 'Chave de acesso da NFe transportada.' },
@@ -892,6 +900,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             name: 'seguro',
             type: 'array',
             description: 'Informações do seguro da carga.',
+            isManipulableArray: true,
             defaultValue: [{ responsavel: 1, cnpjSeguradora: "99888777000166", nomeSeguradora: "SEGURADORA TESTE S.A.", numeroApolice: "AP-09876", averbacoes: ["AV-123"] }],
             children: [
                 { name: 'responsavel', type: 'integer', required: true, description: 'Responsável pelo seguro (1-Emitente, 2-Contratante).' },
@@ -1215,6 +1224,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de serviços prestados.',
+            isManipulableArray: true,
             defaultValue: [{
                 codigo: "14.01",
                 codigoTributacao: "1401",
@@ -1656,7 +1666,7 @@ export const generateInitialBody = (params: Parameter[]): any => {
   params.forEach(param => {
     if (param.children) {
       if (param.type === 'array') {
-        body[param.name] = param.defaultValue !== undefined ? param.defaultValue : [];
+        body[param.name] = param.defaultValue !== undefined ? JSON.parse(JSON.stringify(param.defaultValue)) : [];
       } else { // object
         body[param.name] = generateInitialBody(param.children);
       }

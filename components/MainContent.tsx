@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { ApiEndpointDetails, Parameter, ResponseItem } from '../types';
-import { LinkIcon, CheckIcon, RefreshIcon } from './icons/Icons';
+import { LinkIcon, CheckIcon, RefreshIcon, PlusIcon, TrashIcon, DuplicateIcon } from './icons/Icons';
 import { generateInitialBody, ICMS_CST_MAP, PIS_COFINS_CST_MAP } from '../constants';
 
 const DYNAMIC_MAPS: { [key: string]: any } = {
@@ -56,6 +56,9 @@ const InputField: React.FC<{ param: Parameter, value: any, onChange: (e: React.C
     case 'array[string]':
         return <textarea value={Array.isArray(value) ? value.join('\n') : ''} onChange={onChange} className={`${commonClasses} min-h-[60px]`} placeholder="Um valor por linha..."/>
     default:
+      if (typeof value === 'object' && value !== null) {
+        return <textarea value={JSON.stringify(value, null, 2) || ''} onChange={onChange} className={`${commonClasses} min-h-[80px] font-mono`} />;
+      }
       if (typeof value === 'string' && value.length > 80) {
         return <textarea value={value || ''} onChange={onChange} className={`${commonClasses} min-h-[80px]`} />;
       }
@@ -81,7 +84,14 @@ const ParameterRow: React.FC<{
         val = e.target.value === '' ? null : parseFloat(e.target.value);
     } else if(param.type === 'array[string]') {
         val = e.target.value.split('\n').filter(s => s);
-    } else {
+    } else if (param.type === 'object') {
+        try {
+            val = JSON.parse(e.target.value);
+        } catch (error) {
+            val = e.target.value; // Keep as string if JSON is invalid
+        }
+    }
+    else {
         val = e.target.value;
     }
     
@@ -96,6 +106,30 @@ const ParameterRow: React.FC<{
     }
 
     onValueChange(path, val, triggerInfo);
+  };
+
+  const addItem = () => {
+    if (!param.children) return;
+    const newItem = generateInitialBody(param.children);
+    const newArray = Array.isArray(value) ? [...value, newItem] : [newItem];
+    onValueChange(path, newArray);
+  };
+
+  const removeItem = (index: number) => {
+    if (!Array.isArray(value)) return;
+    const newArray = value.filter((_, i) => i !== index);
+    onValueChange(path, newArray);
+  };
+
+  const duplicateItem = (index: number) => {
+    if (!Array.isArray(value)) return;
+    const itemToDuplicate = JSON.parse(JSON.stringify(value[index]));
+    const newArray = [
+      ...value.slice(0, index + 1),
+      itemToDuplicate,
+      ...value.slice(index + 1),
+    ];
+    onValueChange(path, newArray);
   };
 
   const renderChildren = () => {
@@ -134,11 +168,33 @@ const ParameterRow: React.FC<{
     }
     
     if (param.type === 'array' && Array.isArray(value)) {
+      const arrayControls = param.isManipulableArray ? (
+         <div className="flex justify-end items-center mb-2 -mt-2">
+            <button onClick={addItem} className="flex items-center text-xs text-dark-accent font-semibold hover:text-blue-400 transition-colors">
+                <PlusIcon className="w-4 h-4 mr-1" />
+                Adicionar
+            </button>
+        </div>
+      ) : null;
+
       return (
         <div className="border-l border-dark-border/30 ml-4 pl-4 pt-2">
+            {arrayControls}
           {value.map((item, index) => (
-            <div key={index} className="mb-4 p-3 border border-dark-border/50 rounded-lg bg-dark-surface/30">
-              <p className="text-xs font-semibold text-dark-text-secondary mb-2">Item {index + 1}</p>
+            <div key={index} className="mb-4 p-3 border border-dark-border/50 rounded-lg bg-dark-surface/30 relative">
+              <div className="flex justify-between items-center mb-2">
+                 <p className="text-xs font-semibold text-dark-text-secondary">Item {index + 1}</p>
+                 {param.isManipulableArray && (
+                    <div className="flex items-center space-x-2">
+                        <button onClick={() => duplicateItem(index)} title="Duplicar Item" className="text-dark-text-secondary hover:text-white transition-colors">
+                            <DuplicateIcon className="w-4 h-4"/>
+                        </button>
+                        <button onClick={() => removeItem(index)} title="Remover Item" className="text-dark-text-secondary hover:text-red-400 transition-colors">
+                            <TrashIcon className="w-4 h-4"/>
+                        </button>
+                    </div>
+                 )}
+              </div>
               {childrenToRender.map(childParam => (
                 <ParameterRow 
                   key={childParam.name}
