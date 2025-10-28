@@ -24,6 +24,11 @@ export interface ResponseItem {
   schema?: string;
 }
 
+export interface Preset {
+  label: string;
+  body: any;
+}
+
 export interface ApiEndpointDetails {
   id: string;
   tag: string;
@@ -34,6 +39,7 @@ export interface ApiEndpointDetails {
   headers?: Parameter[];
   parameters: Parameter[];
   responses: ResponseItem[];
+  presets?: Preset[];
 }
 
 export interface CodeExample {

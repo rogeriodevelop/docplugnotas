@@ -1,5 +1,5 @@
 import React from 'react';
-import type { NavItem, ApiEndpointDetails, CodeExample, Parameter } from './types';
+import type { NavItem, ApiEndpointDetails, CodeExample, Parameter, Preset } from './types';
 
 export const SIDEBAR_DATA: NavItem[] = [
   { id: 'visaoGeral', label: 'Visão Geral' },
@@ -131,6 +131,164 @@ export const PIS_COFINS_CST_MAP: { [key: string]: string[] } = {
     '99': ['baseCalculo', 'aliquota'],
 };
 
+const NFE_PRESETS: Preset[] = [
+  {
+    label: 'Venda Simples (Produto)',
+    body: {
+      idIntegracao: "VENDA_SIMPLES_001",
+      presenca: 1,
+      naturezaOperacao: "VENDA DE MERCADORIA",
+      tipo: 1,
+      finalidade: 1,
+      ambiente: 2,
+      documentosReferenciados: [],
+      destinatario: {
+        cpfCnpj: "00000000000000",
+        nome: "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL",
+        indicadorInscricaoEstadual: 9,
+        inscricaoEstadual: "",
+        email: "destinatario@teste.com",
+        telefone: "44999998888",
+        endereco: {
+          logradouro: "AVENIDA TESTE", numero: "1234", complemento: "SALA 1", bairro: "CENTRO",
+          codigoCidade: "4115200", cidade: "MARINGA", uf: "PR", cep: "87000000",
+          codigoPais: "1058", pais: "BRASIL"
+        }
+      },
+      itens: [{
+        numero: 1, codigo: "P001", descricao: "PRODUTO TESTE - VENDA SIMPLES", ncm: "22030000", cest: "", cfop: "5102",
+        unidade: "UN", quantidade: 1, valor: 150.00, valorFrete: 0, valorSeguro: 0, valorDesconto: 0,
+        impostos: {
+          icms: { situacaoTributaria: "102", origem: 0 },
+          pis: { situacaoTributaria: "07" },
+          cofins: { situacaoTributaria: "07" }
+        }
+      }],
+      pagamentos: [{ forma: "01", valor: 150.00, bandeira: "", cnpjCredenciadora: "" }],
+      transporte: { modalidadeFrete: 9, transportadora: { cpfCnpj: "", nome: "" }, veiculo: { placa: "", uf: "", rntrc: "" } }
+    }
+  },
+  {
+    label: 'NFe de Devolução de Mercadoria',
+    body: {
+      idIntegracao: "DEVOLUCAO_001",
+      presenca: 1,
+      naturezaOperacao: "DEVOLUCAO DE MERCADORIA",
+      tipo: 0, // Entrada
+      finalidade: 4, // Devolução
+      ambiente: 2,
+      documentosReferenciados: [{
+        chave: "41000000000000000000000000000000000000000001"
+      }],
+      destinatario: {
+        cpfCnpj: "00000000000000", // CNPJ do emitente da nota original
+        nome: "EMPRESA DA NOTA ORIGINAL LTDA",
+        indicadorInscricaoEstadual: 1,
+        inscricaoEstadual: "9051829988",
+        email: "fornecedor@teste.com",
+        telefone: "",
+        endereco: {
+          logradouro: "AVENIDA DO FORNECEDOR", numero: "500", complemento: "", bairro: "INDUSTRIAL",
+          codigoCidade: "4115200", cidade: "MARINGA", uf: "PR", cep: "87000100",
+          codigoPais: "1058", pais: "BRASIL"
+        }
+      },
+      itens: [{
+        numero: 1, codigo: "P001", descricao: "PRODUTO DEVOLVIDO", ncm: "22030000", cest: "", cfop: "1202", // CFOP de devolução
+        unidade: "UN", quantidade: 1, valor: 150.00, valorFrete: 0, valorSeguro: 0, valorDesconto: 0,
+        impostos: {
+          icms: { situacaoTributaria: "102", origem: 0 },
+          pis: { situacaoTributaria: "07" },
+          cofins: { situacaoTributaria: "07" }
+        }
+      }],
+      pagamentos: [],
+      transporte: { modalidadeFrete: 9 }
+    }
+  },
+  {
+    label: 'Venda com ICMS-ST',
+    body: {
+      idIntegracao: "VENDA_ST_001",
+      presenca: 1,
+      naturezaOperacao: "VENDA DE MERCADORIA COM ST",
+      tipo: 1,
+      finalidade: 1,
+      ambiente: 2,
+      documentosReferenciados: [],
+      destinatario: {
+        cpfCnpj: "00000000000000",
+        nome: "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL",
+        indicadorInscricaoEstadual: 9,
+        inscricaoEstadual: "",
+        email: "destinatario@teste.com",
+        telefone: "44999998888",
+        endereco: {
+          logradouro: "AVENIDA TESTE", numero: "1234", complemento: "SALA 1", bairro: "CENTRO",
+          codigoCidade: "4115200", cidade: "MARINGA", uf: "PR", cep: "87000000",
+          codigoPais: "1058", pais: "BRASIL"
+        }
+      },
+      itens: [{
+        numero: 1, codigo: "P002", descricao: "PRODUTO COM SUBST. TRIBUTARIA", ncm: "33049910", cest: "2001500", cfop: "5405",
+        unidade: "UN", quantidade: 2, valor: 50.00, valorFrete: 0, valorSeguro: 0, valorDesconto: 0,
+        impostos: {
+          icms: {
+            situacaoTributaria: "201",
+            origem: 0,
+            modalidadeBaseCalculoST: 4,
+            percentualMargemValorAdicionadoST: 45.5,
+            percentualReducaoBaseCalculoST: 0,
+            baseCalculoST: 145.50, // (2 * 50) * (1 + 45.5 / 100)
+            aliquotaST: 18,
+            valorST: 26.19 // 145.50 * 0.18
+          },
+          pis: { situacaoTributaria: "07" },
+          cofins: { situacaoTributaria: "07" }
+        }
+      }],
+      pagamentos: [{ forma: "03", valor: 100.00, bandeira: "01", cnpjCredenciadora: "12345678000199" }],
+      transporte: { modalidadeFrete: 9, transportadora: {}, veiculo: {} }
+    }
+  },
+  {
+    label: 'Venda para Consumidor Final',
+    body: {
+      idIntegracao: "VENDA_CONSUMIDOR_001",
+      presenca: 1,
+      naturezaOperacao: "VENDA P/ CONSUMIDOR",
+      tipo: 1,
+      finalidade: 1,
+      ambiente: 2,
+      documentosReferenciados: [],
+      destinatario: {
+        cpfCnpj: "12345678900", // CPF do consumidor
+        nome: "JOAO DA SILVA (CONSUMIDOR FINAL)",
+        indicadorInscricaoEstadual: 9, // Não Contribuinte
+        inscricaoEstadual: "",
+        email: "joao.silva@email.com",
+        telefone: "11987654321",
+        endereco: {
+          logradouro: "RUA DO CONSUMIDOR", numero: "10", complemento: "AP 1", bairro: "VILA NOVA",
+          codigoCidade: "3550308", cidade: "SAO PAULO", uf: "SP", cep: "01000000",
+          codigoPais: "1058", pais: "BRASIL"
+        }
+      },
+      itens: [{
+        numero: 1, codigo: "P003", descricao: "PRODUTO PARA USO E CONSUMO", ncm: "85171231", cest: "", cfop: "5102",
+        unidade: "UN", quantidade: 1, valor: 999.90, valorFrete: 0, valorSeguro: 0, valorDesconto: 10,
+        impostos: {
+          icms: { situacaoTributaria: "102", origem: 0 },
+          pis: { situacaoTributaria: "07" },
+          cofins: { situacaoTributaria: "07" }
+        }
+      }],
+      pagamentos: [{ forma: "03", valor: 989.90, bandeira: "02", cnpjCredenciadora: "" }],
+      transporte: { modalidadeFrete: 9, transportadora: {}, veiculo: {} }
+    }
+  }
+];
+
 export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
   visaoGeral: {
     id: 'visaoGeral',
@@ -157,6 +315,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
     headers: [
       { name: 'x-api-key', type: 'string', required: true, description: 'Seu token de acesso à API.', defaultValue: 'SEU_TOKEN' }
     ],
+    presets: NFE_PRESETS,
     parameters: [
       {
         name: 'Body',
@@ -169,6 +328,16 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
           { name: 'tipo', type: 'integer', description: 'Tipo do documento fiscal (0-Entrada, 1-Saída). Padrão: 1.', defaultValue: 1 },
           { name: 'finalidade', type: 'integer', description: 'Finalidade de emissão da NF-e (1-Normal, 2-Complementar, 3-Ajuste, 4-Devolução). Padrão: 1.', defaultValue: 1 },
           { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.', defaultValue: 2 },
+          {
+            name: 'documentosReferenciados',
+            type: 'array',
+            description: 'Documentos fiscais referenciados (usado para devolução, complementar, etc.).',
+            isManipulableArray: true,
+            defaultValue: [],
+            children: [
+              { name: 'chave', type: 'string', required: true, description: 'Chave de acesso da NFe referenciada.', defaultValue: '' }
+            ]
+          },
           {
             name: 'destinatario',
             type: 'object',

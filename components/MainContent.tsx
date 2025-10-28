@@ -246,9 +246,17 @@ const ResponseRow: React.FC<{ response: ResponseItem }> = ({ response }) => (
   </div>
 )
 
-const ParametersTable: React.FC<{title: string, params: Parameter[], requestBody: any, onBodyChange: any}> = ({title, params, requestBody, onBodyChange}) => {
+const ParametersTable: React.FC<{
+  title: string, 
+  content: ApiEndpointDetails,
+  requestBody: any, 
+  onBodyChange: any,
+  selectedPreset: string,
+  onPresetChange: (e: React.ChangeEvent<HTMLSelectElement>) => void,
+  onReset: () => void,
+}> = ({title, content, requestBody, onBodyChange, selectedPreset, onPresetChange, onReset}) => {
     
-    const bodyParams = params.find(p => p.name === 'Body');
+    const bodyParams = content.parameters.find(p => p.name === 'Body');
 
     const handleBodyChange = (path: (string | number)[], value: any, triggerInfo: any = null) => {
       onBodyChange((prevBody: any) => {
@@ -296,16 +304,28 @@ const ParametersTable: React.FC<{title: string, params: Parameter[], requestBody
           <div className="flex justify-between items-center border-b border-dark-border pb-2 mb-4">
             <h3 className="text-xl font-semibold text-white">{title}</h3>
             <button 
-              onClick={() => {
-                 const initialBody = generateInitialBody(bodyParams.children || []);
-                 const cleanedBody = (window as any).cleanupDynamicBody(initialBody, bodyParams.children || [], DYNAMIC_MAPS)
-                 onBodyChange(initialBody); // Re-run cleanup on reset
-              }}
+              onClick={onReset}
               className="flex items-center text-sm text-dark-text-secondary hover:text-white transition-colors px-2 py-1 rounded-md hover:bg-dark-surface">
               <RefreshIcon className="w-4 h-4 mr-2"/>
               Resetar
             </button>
           </div>
+          {content.presets && content.presets.length > 0 && (
+            <div className="mb-6">
+              <label htmlFor="preset-selector" className="block text-sm font-medium text-dark-text-secondary mb-2">Cenários de Exemplo:</label>
+              <select 
+                id="preset-selector"
+                value={selectedPreset}
+                onChange={onPresetChange}
+                className="w-full bg-dark-surface border border-dark-border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-dark-accent"
+              >
+                <option value="">Selecione um cenário...</option>
+                {content.presets.map(preset => (
+                  <option key={preset.label} value={preset.label}>{preset.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="border-t border-dark-border/50">
             {bodyParams.children.map((param) => (
               <ParameterRow 
@@ -326,6 +346,7 @@ const ParametersTable: React.FC<{title: string, params: Parameter[], requestBody
 const MainContent: React.FC<MainContentProps> = ({ content, requestBody, onBodyChange }) => {
   const [pathCopied, setPathCopied] = useState(false);
   const [activeResponseCode, setActiveResponseCode] = useState<string>(content.responses[0]?.code || '');
+  const [selectedPreset, setSelectedPreset] = useState('');
   
   useEffect(() => {
     // Expose cleanup function globally for reset button, not ideal but works for this structure
@@ -378,6 +399,8 @@ const MainContent: React.FC<MainContentProps> = ({ content, requestBody, onBodyC
     if (content.responses && content.responses.length > 0) {
         setActiveResponseCode(content.responses[0].code);
     }
+    // Reset preset when content changes
+    setSelectedPreset('');
   }, [content]);
 
 
@@ -388,6 +411,29 @@ const MainContent: React.FC<MainContentProps> = ({ content, requestBody, onBodyC
     setPathCopied(true);
     setTimeout(() => setPathCopied(false), 2000);
   }
+
+  const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const presetLabel = e.target.value;
+    setSelectedPreset(presetLabel);
+    if(presetLabel) {
+      const preset = content.presets?.find(p => p.label === presetLabel);
+      if(preset) {
+        const bodyParams = content.parameters.find(p => p.name === 'Body');
+        const cleanedBody = bodyParams?.children ? (window as any).cleanupDynamicBody(preset.body, bodyParams.children, DYNAMIC_MAPS) : preset.body;
+        onBodyChange(cleanedBody);
+      }
+    }
+  };
+
+  const handleReset = () => {
+    const bodyParams = content.parameters.find(p => p.name === 'Body');
+    if (bodyParams?.children) {
+      const initialBody = generateInitialBody(bodyParams.children);
+      const cleanedBody = (window as any).cleanupDynamicBody(initialBody, bodyParams.children, DYNAMIC_MAPS);
+      onBodyChange(cleanedBody);
+    }
+    setSelectedPreset('');
+  };
 
   return (
     <main className="flex-1 bg-dark-bg p-8 overflow-y-auto">
@@ -408,9 +454,12 @@ const MainContent: React.FC<MainContentProps> = ({ content, requestBody, onBodyC
         {content.parameters && content.parameters.length > 0 && content.parameters.some(p => p.name === 'Body') &&
             <ParametersTable 
                 title="Parâmetros" 
-                params={content.parameters} 
+                content={content} 
                 requestBody={requestBody} 
-                onBodyChange={onBodyChange} 
+                onBodyChange={onBodyChange}
+                selectedPreset={selectedPreset}
+                onPresetChange={handlePresetChange}
+                onReset={handleReset}
             />
         }
 
