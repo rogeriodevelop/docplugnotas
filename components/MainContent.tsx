@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import type { ApiEndpointDetails, Parameter, ResponseItem } from '../types';
-import { LinkIcon, CheckIcon } from './icons/Icons';
+import { LinkIcon, CheckIcon, RefreshIcon } from './icons/Icons';
+import { generateInitialBody } from '../constants';
 
 interface MainContentProps {
   content: ApiEndpointDetails;
+  requestBody: any;
+  onBodyChange: (newBody: any) => void;
 }
 
 const MethodBadge: React.FC<{ method: string }> = ({ method }) => {
@@ -22,28 +25,103 @@ const MethodBadge: React.FC<{ method: string }> = ({ method }) => {
   );
 };
 
-const ParameterRow: React.FC<{ param: Parameter; level: number }> = ({ param, level }) => {
-  const isObject = param.children && param.children.length > 0;
+const InputField: React.FC<{ type: string, value: any, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }> = ({ type, value, onChange }) => {
+  const commonClasses = "w-full bg-dark-surface border border-dark-border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-dark-accent";
+  switch (type) {
+    case 'integer':
+    case 'number':
+      return <input type="number" value={value || ''} onChange={onChange} className={commonClasses} />;
+    case 'boolean':
+      return (
+        <div className="flex items-center h-full">
+          <input type="checkbox" checked={!!value} onChange={onChange} className="w-4 h-4 bg-dark-surface border-dark-border rounded text-dark-accent focus:ring-dark-accent" />
+        </div>
+      );
+    case 'array[string]':
+        return <textarea value={Array.isArray(value) ? value.join('\n') : ''} onChange={onChange} className={`${commonClasses} min-h-[60px]`} placeholder="Um valor por linha..."/>
+    default:
+      if (value?.length > 80) {
+        return <textarea value={value || ''} onChange={onChange} className={`${commonClasses} min-h-[80px]`} />;
+      }
+      return <input type="text" value={value || ''} onChange={onChange} className={commonClasses} />;
+  }
+}
+
+const ParameterRow: React.FC<{ param: Parameter; level: number; path: (string | number)[], value: any; onValueChange: (path: (string | number)[], value: any) => void; }> = ({ param, level, path, value, onValueChange }) => {
+  const isObjectOrArray = param.children && param.children.length > 0;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    let val: any;
+    if (e.target.type === 'checkbox') {
+        val = (e.target as HTMLInputElement).checked;
+    } else if(e.target.type === 'number') {
+        val = parseFloat(e.target.value);
+        if(isNaN(val)) val = null;
+    } else if(param.type === 'array[string]') {
+        val = e.target.value.split('\n').filter(s => s);
+    } else {
+        val = e.target.value;
+    }
+    onValueChange(path, val);
+  };
+  
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr,4fr] gap-2 py-3 border-b border-dark-border/50">
-        <div style={{ paddingLeft: `${level * 20}px` }}>
-          <span className="font-mono text-sm">{param.name}</span>
-          {param.required && <span className="text-red-400 text-xs ml-2">required</span>}
+      <div style={{ paddingLeft: `${level * 20}px` }} className={`py-3 ${level > 0 ? '' : 'border-t'} border-b border-dark-border/50`}>
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-shrink-0 w-1/3 pr-2">
+            <span className="font-mono text-sm break-words">{param.name}</span>
+            {param.required && <span className="text-red-400 text-xs ml-2">required</span>}
+            <div className="font-mono text-xs text-sky-400 mt-1">{param.type}</div>
+          </div>
+          <div className="flex-grow w-2/3">
+            <p className="text-sm text-dark-text-secondary mb-2" dangerouslySetInnerHTML={{ __html: param.description }} />
+            {!isObjectOrArray && <InputField type={param.type} value={value} onChange={handleChange} />}
+          </div>
         </div>
-        <div className="font-mono text-sm text-sky-400">{param.type}</div>
-        <div className="text-sm text-dark-text-secondary" dangerouslySetInnerHTML={{ __html: param.description }}/>
       </div>
-      {isObject && (
-        <div className="border-l border-dark-border ml-4">
-          {param.children?.map((child, index) => (
-            <ParameterRow key={index} param={child} level={level + 1} />
-          ))}
-        </div>
+
+      {param.type === 'object' && isObjectOrArray && (
+         <div className="border-l border-dark-border/30 ml-4">
+             {param.children?.map((child) => (
+                 <ParameterRow 
+                    key={child.name} 
+                    param={child} 
+                    level={level + 1}
+                    path={[...path, child.name]}
+                    value={value ? value[child.name] : undefined}
+                    onValueChange={onValueChange}
+                />
+             ))}
+         </div>
+      )}
+      {param.type === 'array' && isObjectOrArray && value && Array.isArray(value) && (
+         <div className="border-l border-dark-border/30 ml-4 pl-4 pt-2">
+             {value.map((item, index) => (
+                 <div key={index} className="mb-4 p-3 border border-dark-border/50 rounded-lg bg-dark-surface/30">
+                    <p className="text-xs font-semibold text-dark-text-secondary mb-2">Item {index + 1}</p>
+                     {param.children?.map(childParam => {
+                        const childPath = [...path, index, childParam.name];
+                        const childValue = item ? item[childParam.name] : undefined;
+                        return (
+                          <ParameterRow 
+                            key={childParam.name}
+                            param={childParam}
+                            level={level + 1}
+                            path={childPath}
+                            value={childValue}
+                            onValueChange={onValueChange}
+                          />
+                        )
+                     })}
+                 </div>
+             ))}
+         </div>
       )}
     </>
   );
 };
+
 
 const ResponseRow: React.FC<{ response: ResponseItem }> = ({ response }) => (
   <div className="py-4">
@@ -56,24 +134,58 @@ const ResponseRow: React.FC<{ response: ResponseItem }> = ({ response }) => (
   </div>
 )
 
-const ParametersTable: React.FC<{title: string, params: Parameter[]}> = ({title, params}) => (
-    <section className="mt-10">
-      <h3 className="text-xl font-semibold text-white border-b border-dark-border pb-2 mb-4">{title}</h3>
-      <div className="text-sm text-dark-text-secondary grid grid-cols-1 md:grid-cols-[2fr,1fr,4fr] gap-2 px-2 pb-2">
-        <span>Nome</span>
-        <span>Tipo</span>
-        <span>Descrição</span>
-      </div>
-      <div className="border-t border-dark-border">
-        {params.map((param, index) => (
-          <ParameterRow key={index} param={param} level={0} />
-        ))}
-      </div>
-    </section>
-);
+const ParametersTable: React.FC<{title: string, params: Parameter[], requestBody: any, onBodyChange: any}> = ({title, params, requestBody, onBodyChange}) => {
+    
+    const bodyParams = params.find(p => p.name === 'Body');
+
+    const handleBodyChange = (path: (string | number)[], value: any) => {
+      onBodyChange((prevBody: any) => {
+        const newBody = JSON.parse(JSON.stringify(prevBody)); // Deep copy
+        let current = newBody;
+        for (let i = 0; i < path.length - 1; i++) {
+          if (current[path[i]] === undefined) {
+             // Create path if it doesn't exist
+             if(typeof path[i+1] === 'number') current[path[i]] = [];
+             else current[path[i]] = {};
+          }
+          current = current[path[i]];
+        }
+        current[path[path.length - 1]] = value;
+        return newBody;
+      });
+    };
+    
+    if (!bodyParams || !bodyParams.children) return null;
+
+    return (
+        <section className="mt-10">
+          <div className="flex justify-between items-center border-b border-dark-border pb-2 mb-4">
+            <h3 className="text-xl font-semibold text-white">{title}</h3>
+            <button 
+              onClick={() => onBodyChange(generateInitialBody(bodyParams.children || []))}
+              className="flex items-center text-sm text-dark-text-secondary hover:text-white transition-colors px-2 py-1 rounded-md hover:bg-dark-surface">
+              <RefreshIcon className="w-4 h-4 mr-2"/>
+              Resetar
+            </button>
+          </div>
+          <div>
+            {bodyParams.children.map((param) => (
+              <ParameterRow 
+                key={param.name} 
+                param={param} 
+                level={0}
+                path={[param.name]}
+                value={requestBody ? requestBody[param.name] : undefined}
+                onValueChange={handleBodyChange}
+               />
+            ))}
+          </div>
+        </section>
+    );
+}
 
 
-const MainContent: React.FC<MainContentProps> = ({ content }) => {
+const MainContent: React.FC<MainContentProps> = ({ content, requestBody, onBodyChange }) => {
   const [pathCopied, setPathCopied] = useState(false);
   const [activeResponseCode, setActiveResponseCode] = useState<string>(content.responses[0]?.code || '');
   
@@ -108,8 +220,16 @@ const MainContent: React.FC<MainContentProps> = ({ content }) => {
 
         <p className="text-dark-text-secondary leading-relaxed" dangerouslySetInnerHTML={{__html: content.description}} />
         
-        {content.headers && content.headers.length > 0 && <ParametersTable title="Headers" params={content.headers} />}
-        {content.parameters && content.parameters.length > 0 && <ParametersTable title="Parâmetros" params={content.parameters} />}
+        {/* We won't render headers as an interactive table for now */}
+        
+        {content.parameters && content.parameters.length > 0 && 
+            <ParametersTable 
+                title="Parâmetros" 
+                params={content.parameters} 
+                requestBody={requestBody} 
+                onBodyChange={onBodyChange} 
+            />
+        }
 
 
         <section className="mt-10">

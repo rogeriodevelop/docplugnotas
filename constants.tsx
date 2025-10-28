@@ -1,5 +1,5 @@
 import React from 'react';
-import type { NavItem, ApiEndpointDetails, CodeExample } from './types';
+import type { NavItem, ApiEndpointDetails, CodeExample, Parameter } from './types';
 
 export const SIDEBAR_DATA: NavItem[] = [
   { id: 'visaoGeral', label: 'Visão Geral' },
@@ -95,7 +95,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
     path: '/nfe',
     description: 'Este método é responsável por adicionar uma nova NFe na nossa base de dados. O processo de autorização é assíncrono, ou seja, você envia os dados do documento e nós cuidamos do resto. Para saber o status do documento, você pode consultar o método de consulta de NFe ou configurar um webhook.',
     headers: [
-      { name: 'x-api-key', type: 'string', required: true, description: 'Seu token de acesso à API.' }
+      { name: 'x-api-key', type: 'string', required: true, description: 'Seu token de acesso à API.', defaultValue: 'SEU_TOKEN' }
     ],
     parameters: [
       {
@@ -103,39 +103,39 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'idIntegracao', type: 'string', description: 'ID de integração para facilitar a busca.' },
-          { name: 'presenca', type: 'integer', required: true, description: 'Indicador de presença do comprador no estabelecimento (0-Não se aplica, 1-Operação presencial, 2-Operação não presencial, pela Internet, etc.).' },
-          { name: 'naturezaOperacao', type: 'string', required: true, description: 'Descrição da natureza da operação (Ex: Venda de mercadoria).' },
-          { name: 'tipo', type: 'integer', description: 'Tipo do documento fiscal (0-Entrada, 1-Saída). Padrão: 1.' },
-          { name: 'finalidade', type: 'integer', description: 'Finalidade de emissão da NF-e (1-Normal, 2-Complementar, 3-Ajuste, 4-Devolução). Padrão: 1.' },
-          { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.' },
+          { name: 'idIntegracao', type: 'string', description: 'ID de integração para facilitar a busca.', defaultValue: 'XXXYY999' },
+          { name: 'presenca', type: 'integer', required: true, description: 'Indicador de presença do comprador no estabelecimento (0-Não se aplica, 1-Operação presencial, 2-Operação não presencial, pela Internet, etc.).', defaultValue: 1 },
+          { name: 'naturezaOperacao', type: 'string', required: true, description: 'Descrição da natureza da operação (Ex: Venda de mercadoria).', defaultValue: "VENDA DE MERCADORIAS" },
+          { name: 'tipo', type: 'integer', description: 'Tipo do documento fiscal (0-Entrada, 1-Saída). Padrão: 1.', defaultValue: 1 },
+          { name: 'finalidade', type: 'integer', description: 'Finalidade de emissão da NF-e (1-Normal, 2-Complementar, 3-Ajuste, 4-Devolução). Padrão: 1.', defaultValue: 1 },
+          { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.', defaultValue: 2 },
           {
             name: 'destinatario',
             type: 'object',
             required: true,
             description: 'Dados do destinatário.',
             children: [
-              { name: 'cpfCnpj', type: 'string', required: true, description: 'CPF ou CNPJ do destinatário.' },
-              { name: 'nome', type: 'string', required: true, description: 'Nome ou razão social.' },
-              { name: 'indicadorInscricaoEstadual', type: 'integer', required: true, description: 'Indicador da IE (1-Contribuinte ICMS, 2-Contribuinte isento, 9-Não Contribuinte).' },
-              { name: 'inscricaoEstadual', type: 'string', description: 'Inscrição Estadual, se houver.' },
-              { name: 'email', type: 'string', description: 'E-mail do destinatário.' },
-              { name: 'telefone', type: 'string', description: 'Telefone do destinatário.' },
+              { name: 'cpfCnpj', type: 'string', required: true, description: 'CPF ou CNPJ do destinatário.', defaultValue: "00000000000000" },
+              { name: 'nome', type: 'string', required: true, description: 'Nome ou razão social.', defaultValue: "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL" },
+              { name: 'indicadorInscricaoEstadual', type: 'integer', required: true, description: 'Indicador da IE (1-Contribuinte ICMS, 2-Contribuinte isento, 9-Não Contribuinte).', defaultValue: 9 },
+              { name: 'inscricaoEstadual', type: 'string', description: 'Inscrição Estadual, se houver.', defaultValue: "" },
+              { name: 'email', type: 'string', description: 'E-mail do destinatário.', defaultValue: "destinatario@teste.com" },
+              { name: 'telefone', type: 'string', description: 'Telefone do destinatário.', defaultValue: "44999998888" },
               {
                 name: 'endereco',
                 type: 'object',
                 description: 'Endereço do destinatário.',
                 children: [
-                  { name: 'logradouro', type: 'string', required: true, description: 'Nome da rua, avenida, etc.' },
-                  { name: 'numero', type: 'string', required: true, description: 'Número do imóvel.' },
-                  { name: 'complemento', type: 'string', description: 'Complemento do endereço.' },
-                  { name: 'bairro', type: 'string', required: true, description: 'Bairro.' },
-                  { name: 'codigoCidade', type: 'string', required: true, description: 'Código IBGE do município.'},
-                  { name: 'cidade', type: 'string', required: true, description: 'Nome da cidade.' },
-                  { name: 'uf', type: 'string', required: true, description: 'Sigla da Unidade Federativa.' },
-                  { name: 'cep', type: 'string', required: true, description: 'Código de Endereçamento Postal.' },
-                  { name: 'codigoPais', type: 'string', description: 'Código do país (Bacen). Padrão: 1058.' },
-                  { name: 'pais', type: 'string', description: 'Nome do país. Padrão: BRASIL.' },
+                  { name: 'logradouro', type: 'string', required: true, description: 'Nome da rua, avenida, etc.', defaultValue: "AVENIDA TESTE" },
+                  { name: 'numero', type: 'string', required: true, description: 'Número do imóvel.', defaultValue: "1234" },
+                  { name: 'complemento', type: 'string', description: 'Complemento do endereço.', defaultValue: "SALA 1" },
+                  { name: 'bairro', type: 'string', required: true, description: 'Bairro.', defaultValue: "CENTRO" },
+                  { name: 'codigoCidade', type: 'string', required: true, description: 'Código IBGE do município.', defaultValue: "4115200" },
+                  { name: 'cidade', type: 'string', required: true, description: 'Nome da cidade.', defaultValue: "MARINGA" },
+                  { name: 'uf', type: 'string', required: true, description: 'Sigla da Unidade Federativa.', defaultValue: "PR" },
+                  { name: 'cep', type: 'string', required: true, description: 'Código de Endereçamento Postal.', defaultValue: "87000000" },
+                  { name: 'codigoPais', type: 'string', description: 'Código do país (Bacen). Padrão: 1058.', defaultValue: "1058" },
+                  { name: 'pais', type: 'string', description: 'Nome do país. Padrão: BRASIL.', defaultValue: "BRASIL" },
                 ],
               },
             ],
@@ -145,6 +145,38 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de itens da nota.',
+            defaultValue: [{
+              numero: 1,
+              codigo: "001",
+              descricao: "PRODUTO TESTE COM IMPOSTOS",
+              ncm: "22030000",
+              cest: "",
+              cfop: "5102",
+              unidade: "UN",
+              quantidade: 1,
+              valor: 10.50,
+              valorFrete: 0,
+              valorSeguro: 0,
+              valorDesconto: 0,
+              impostos: {
+                  icms: {
+                      situacaoTributaria: "102",
+                      origem: 0,
+                      baseCalculo: 0,
+                      aliquota: 0,
+                  },
+                  pis: {
+                      situacaoTributaria: "07",
+                      baseCalculo: 0,
+                      aliquota: 0
+                  },
+                  cofins: {
+                      situacaoTributaria: "07",
+                      baseCalculo: 0,
+                      aliquota: 0,
+                  }
+              }
+            }],
             children: [
               { name: 'numero', type: 'integer', required: true, description: 'Número sequencial do item.' },
               { name: 'codigo', type: 'string', required: true, description: 'Código do produto.' },
@@ -202,6 +234,12 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             name: 'pagamentos',
             type: 'array',
             description: 'Lista de formas de pagamento.',
+            defaultValue: [{
+                forma: "01",
+                valor: 10.50,
+                bandeira: "",
+                cnpjCredenciadora: ""
+            }],
             children: [
                 {
                     name: 'forma',
@@ -232,14 +270,14 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'object',
             description: 'Dados do transporte da mercadoria.',
             children: [
-                { name: 'modalidadeFrete', type: 'integer', required: true, description: 'Modalidade do frete (0-Emitente, 1-Destinatário, 2-Terceiros, 9-Sem frete).' },
+                { name: 'modalidadeFrete', type: 'integer', required: true, description: 'Modalidade do frete (0-Emitente, 1-Destinatário, 2-Terceiros, 9-Sem frete).', defaultValue: 9 },
                 {
                     name: 'transportadora',
                     type: 'object',
                     description: 'Dados da transportadora.',
                     children: [
-                        { name: 'cpfCnpj', type: 'string', description: 'CPF ou CNPJ da transportadora.' },
-                        { name: 'nome', type: 'string', description: 'Nome ou Razão Social.' },
+                        { name: 'cpfCnpj', type: 'string', description: 'CPF ou CNPJ da transportadora.', defaultValue: "" },
+                        { name: 'nome', type: 'string', description: 'Nome ou Razão Social.', defaultValue: "" },
                     ]
                 },
                  {
@@ -247,9 +285,9 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
                     type: 'object',
                     description: 'Dados do veículo.',
                     children: [
-                        { name: 'placa', type: 'string', description: 'Placa do veículo.' },
-                        { name: 'uf', type: 'string', description: 'UF da placa.' },
-                        { name: 'rntrc', type: 'string', description: 'Registro Nacional de Transportadores.' },
+                        { name: 'placa', type: 'string', description: 'Placa do veículo.', defaultValue: "" },
+                        { name: 'uf', type: 'string', description: 'UF da placa.', defaultValue: "" },
+                        { name: 'rntrc', type: 'string', description: 'Registro Nacional de Transportadores.', defaultValue: "" },
                     ]
                 },
             ]
@@ -353,7 +391,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'motivo', type: 'string', required: true, description: 'Justificativa para o cancelamento, com no mínimo 15 caracteres.' },
+          { name: 'motivo', type: 'string', required: true, description: 'Justificativa para o cancelamento, com no mínimo 15 caracteres.', defaultValue: 'Desistência da compra pelo cliente.' },
         ]
       },
     ],
@@ -388,10 +426,10 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'numeroInicial', type: 'integer', required: true, description: 'Número inicial da faixa a ser inutilizada.' },
-          { name: 'numeroFinal', type: 'integer', required: true, description: 'Número final da faixa a ser inutilizada.' },
-          { name: 'serie', type: 'integer', required: true, description: 'Série da NFe.' },
-          { name: 'justificativa', type: 'string', required: true, description: 'Motivo da inutilização, com no mínimo 15 caracteres.' },
+          { name: 'numeroInicial', type: 'integer', required: true, description: 'Número inicial da faixa a ser inutilizada.', defaultValue: 100 },
+          { name: 'numeroFinal', type: 'integer', required: true, description: 'Número final da faixa a ser inutilizada.', defaultValue: 105 },
+          { name: 'serie', type: 'integer', required: true, description: 'Série da NFe.', defaultValue: 1 },
+          { name: 'justificativa', type: 'string', required: true, description: 'Motivo da inutilização, com no mínimo 15 caracteres.', defaultValue: 'Falha na sequência de numeração da nota fiscal.' },
         ]
       },
     ],
@@ -435,7 +473,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'correcao', type: 'string', required: true, description: 'Texto da correção, com no mínimo 15 caracteres.' },
+          { name: 'correcao', type: 'string', required: true, description: 'Texto da correção, com no mínimo 15 caracteres.', defaultValue: 'O endereço correto do destinatário é Rua Exemplo, Nº 123.' },
         ]
       },
     ],
@@ -482,12 +520,12 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'emails', type: 'array[string]', required: true, description: 'Lista de endereços de e-mail (strings) para os quais a NFe será enviada.' },
-          { name: 'copia', type: 'array[string]', description: 'Lista de emails para enviar em cópia (CC).' },
-          { name: 'copiaOculta', type: 'array[string]', description: 'Lista de emails para enviar em cópia oculta (BCC).' },
-          { name: 'assunto', type: 'string', description: 'Assunto do e-mail. Se não informado, um padrão será utilizado.' },
-          { name: 'mensagem', type: 'string', description: 'Corpo da mensagem do e-mail. Pode conter HTML. Se não informado, um padrão será utilizado.' },
-          { name: 'pdf', type: 'boolean', description: 'Se `true`, anexa o DANFE em PDF. Padrão: `true`.' },
+          { name: 'emails', type: 'array[string]', required: true, description: 'Lista de endereços de e-mail (strings) para os quais a NFe será enviada.', defaultValue: '["cliente1@email.com"]' },
+          { name: 'copia', type: 'array[string]', description: 'Lista de emails para enviar em cópia (CC).', defaultValue: '["contador@email.com"]' },
+          { name: 'copiaOculta', type: 'array[string]', description: 'Lista de emails para enviar em cópia oculta (BCC).', defaultValue: '[]' },
+          { name: 'assunto', type: 'string', description: 'Assunto do e-mail. Se não informado, um padrão será utilizado.', defaultValue: 'Sua Nota Fiscal Eletrônica Chegou!' },
+          { name: 'mensagem', type: 'string', description: 'Corpo da mensagem do e-mail. Pode conter HTML. Se não informado, um padrão será utilizado.', defaultValue: '<h1>Olá!</h1><p>Segue em anexo o XML e o DANFE de sua nota fiscal. Obrigado!</p>' },
+          { name: 'pdf', type: 'boolean', description: 'Se `true`, anexa o DANFE em PDF. Padrão: `true`.', defaultValue: true },
         ]
       },
     ],
@@ -522,16 +560,16 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'idIntegracao', type: 'string', description: 'ID de integração para facilitar a busca.' },
-          { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.' },
-          { name: 'presenca', type: 'integer', required: true, description: 'Indicador de presença do comprador (valor 1 - Operação presencial).' },
+          { name: 'idIntegracao', type: 'string', description: 'ID de integração para facilitar a busca.', defaultValue: 'PEDIDO123' },
+          { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.', defaultValue: 2 },
+          { name: 'presenca', type: 'integer', required: true, description: 'Indicador de presença do comprador (valor 1 - Operação presencial).', defaultValue: 1 },
           {
             name: 'destinatario',
             type: 'object',
             description: 'Dados do destinatário (opcional na NFCe).',
             children: [
-              { name: 'cpfCnpj', type: 'string', description: 'CPF ou CNPJ do consumidor.' },
-              { name: 'nome', type: 'string', description: 'Nome do consumidor.' },
+              { name: 'cpfCnpj', type: 'string', description: 'CPF ou CNPJ do consumidor.', defaultValue: '12345678900' },
+              { name: 'nome', type: 'string', description: 'Nome do consumidor.', defaultValue: '' },
             ]
           },
           {
@@ -539,6 +577,13 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista com os dados do pagamento.',
+             defaultValue: [{
+                forma: "03",
+                valor: 50.00,
+                bandeira: "01",
+                cnpjCredenciadora: "12345678000199",
+                tipoIntegracao: 2,
+            }],
             children: [
               { name: 'forma', type: 'string', required: true, description: 'Forma de pagamento (ex: 01-Dinheiro, 03-Cartão de Crédito, 04-Cartão de Débito).' },
               { name: 'valor', type: 'number', required: true, description: 'Valor do pagamento.' },
@@ -552,6 +597,17 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de itens da nota.',
+            defaultValue: [{
+                codigo: "P001",
+                descricao: "PRODUTO 1 NFC-E",
+                ncm: "22021000",
+                cest: "",
+                cfop: "5102",
+                unidade: "UN",
+                quantidade: 2,
+                valor: 25.00,
+                valorDesconto: 0
+            }],
             children: [
                { name: 'codigo', type: 'string', required: true, description: 'Código do produto.' },
                { name: 'descricao', type: 'string', required: true, description: 'Descrição do produto.' },
@@ -564,9 +620,9 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
                { name: 'valorDesconto', type: 'number', description: 'Valor do desconto do item.' },
             ]
           },
-          { name: 'valorFrete', type: 'number', description: 'Valor total do frete.' },
-          { name: 'valorDesconto', type: 'number', description: 'Valor total do desconto.' },
-          { name: 'valorOutros', type: 'number', description: 'Outras despesas acessórias.' },
+          { name: 'valorFrete', type: 'number', description: 'Valor total do frete.', defaultValue: 0 },
+          { name: 'valorDesconto', type: 'number', description: 'Valor total do desconto.', defaultValue: 0 },
+          { name: 'valorOutros', type: 'number', description: 'Outras despesas acessórias.', defaultValue: 0 },
         ]
       },
     ],
@@ -645,7 +701,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'motivo', type: 'string', required: true, description: 'Justificativa para o cancelamento.' },
+          { name: 'motivo', type: 'string', required: true, description: 'Justificativa para o cancelamento.', defaultValue: "Erro na emissão" },
         ]
       },
     ],
@@ -672,10 +728,10 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'numeroInicial', type: 'integer', required: true, description: 'Número inicial.' },
-          { name: 'numeroFinal', type: 'integer', required: true, description: 'Número final.' },
-          { name: 'serie', type: 'integer', required: true, description: 'Série.' },
-          { name: 'justificativa', type: 'string', required: true, description: 'Motivo da inutilização.' },
+          { name: 'numeroInicial', type: 'integer', required: true, description: 'Número inicial.', defaultValue: 200 },
+          { name: 'numeroFinal', type: 'integer', required: true, description: 'Número final.', defaultValue: 200 },
+          { name: 'serie', type: 'integer', required: true, description: 'Série.', defaultValue: 1 },
+          { name: 'justificativa', type: 'string', required: true, description: 'Motivo da inutilização.', defaultValue: "Quebra de sequência." },
         ]
       },
     ],
@@ -702,30 +758,31 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'idIntegracao', type: 'string', description: 'ID de integração.' },
-          { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.' },
+          { name: 'idIntegracao', type: 'string', description: 'ID de integração.', defaultValue: 'mdfe-001' },
+          { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.', defaultValue: 2 },
           {
             name: 'emitente',
             type: 'object',
             required: true,
             description: 'Dados do emitente do MDFe.',
             children: [
-              { name: 'cpfCnpj', type: 'string', required: true, description: 'CNPJ do emitente.' }
+              { name: 'cpfCnpj', type: 'string', required: true, description: 'CNPJ do emitente.', defaultValue: '00000000000191' }
             ]
           },
-          { name: 'tipoEmitente', type: 'integer', required: true, description: 'Tipo do emitente (1-Prestador de Serviço de Transporte, 2-Transportador de Carga Própria).' },
-          { name: 'tipoTransportador', type: 'integer', required: true, description: 'Tipo do transportador (1-ETC, 2-TAC, 3-CTC).' },
-          { name: 'modelo', type: 'integer', required: true, description: 'Modelo do documento fiscal (58 para MDFe).' },
-          { name: 'serie', type: 'integer', required: true, description: 'Série do MDFe.' },
-          { name: 'numero', type: 'integer', required: true, description: 'Número do MDFe.' },
-          { name: 'dataEmissao', type: 'string', description: 'Data e hora de emissão no formato AAAA-MM-DDTHH:MM:SS-03:00.' },
-          { name: 'ufInicio', type: 'string', required: true, description: 'UF de início da prestação.' },
-          { name: 'ufFim', type: 'string', required: true, description: 'UF de término da prestação.' },
+          { name: 'tipoEmitente', type: 'integer', required: true, description: 'Tipo do emitente (1-Prestador de Serviço de Transporte, 2-Transportador de Carga Própria).', defaultValue: 1 },
+          { name: 'tipoTransportador', type: 'integer', required: true, description: 'Tipo do transportador (1-ETC, 2-TAC, 3-CTC).', defaultValue: 1 },
+          { name: 'modelo', type: 'integer', required: true, description: 'Modelo do documento fiscal (58 para MDFe).', defaultValue: 58 },
+          { name: 'serie', type: 'integer', required: true, description: 'Série do MDFe.', defaultValue: 1 },
+          { name: 'numero', type: 'integer', required: true, description: 'Número do MDFe.', defaultValue: 150 },
+          { name: 'dataEmissao', type: 'string', description: 'Data e hora de emissão no formato AAAA-MM-DDTHH:MM:SS-03:00.', defaultValue: '2024-01-01T10:00:00-03:00' },
+          { name: 'ufInicio', type: 'string', required: true, description: 'UF de início da prestação.', defaultValue: 'PR' },
+          { name: 'ufFim', type: 'string', required: true, description: 'UF de término da prestação.', defaultValue: 'SC' },
           {
             name: 'municipioCarregamento',
             type: 'array',
             required: true,
             description: 'Lista de municípios de carregamento.',
+            defaultValue: [{ codigo: "4115200", nome: "Maringá" }],
             children: [
               { name: 'codigo', type: 'string', required: true, description: 'Código IBGE do município.' },
               { name: 'nome', type: 'string', description: 'Nome do município.' },
@@ -737,18 +794,19 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             required: true,
             description: 'Dados do veículo de tração.',
             children: [
-                { name: 'placa', type: 'string', required: true, description: 'Placa do veículo.' },
-                { name: 'renavam', type: 'string', description: 'RENAVAM do veículo.'},
-                { name: 'tara', type: 'integer', required: true, description: 'Tara do veículo em KG.' },
-                { name: 'capacidadeKg', type: 'integer', description: 'Capacidade do veículo em KG.'},
-                { name: 'uf', type: 'string', required: true, description: 'UF de emplacamento do veículo.' },
-                { name: 'rntrc', type: 'string', required: true, description: 'Registro Nacional de Transportadores Rodoviários de Cargas.' },
+                { name: 'placa', type: 'string', required: true, description: 'Placa do veículo.', defaultValue: 'ABC1234' },
+                { name: 'renavam', type: 'string', description: 'RENAVAM do veículo.', defaultValue: '123456789' },
+                { name: 'tara', type: 'integer', required: true, description: 'Tara do veículo em KG.', defaultValue: 4000 },
+                { name: 'capacidadeKg', type: 'integer', description: 'Capacidade do veículo em KG.', defaultValue: 10000 },
+                { name: 'uf', type: 'string', required: true, description: 'UF de emplacamento do veículo.', defaultValue: 'PR' },
+                { name: 'rntrc', type: 'string', required: true, description: 'Registro Nacional de Transportadores Rodoviários de Cargas.', defaultValue: '12345678' },
             ]
           },
           {
             name: 'veiculoReboque',
             type: 'array',
             description: 'Dados dos veículos reboque, se houver.',
+            defaultValue: [],
             children: [
                 { name: 'placa', type: 'string', required: true, description: 'Placa do veículo.' },
                 { name: 'tara', type: 'integer', required: true, description: 'Tara do veículo em KG.' },
@@ -760,6 +818,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de condutores do veículo.',
+            defaultValue: [{ nome: "JOAO DA SILVA", cpf: "12345678901" }],
             children: [
                 { name: 'nome', type: 'string', required: true, description: 'Nome do condutor.' },
                 { name: 'cpf', type: 'string', required: true, description: 'CPF do condutor.' },
@@ -770,6 +829,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Documentos fiscais transportados.',
+            defaultValue: [{ chaveNFe: "41000000000000000000000000000000000000000001", segundoCodigoBarras: "" }],
             children: [
                 { name: 'chaveNFe', type: 'string', required: true, description: 'Chave de acesso da NFe transportada.' },
                 { name: 'segundoCodigoBarras', type: 'string', description: 'Informação do segundo código de barras.'},
@@ -779,6 +839,7 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             name: 'seguro',
             type: 'array',
             description: 'Informações do seguro da carga.',
+            defaultValue: [{ responsavel: 1, cnpjSeguradora: "99888777000166", nomeSeguradora: "SEGURADORA TESTE S.A.", numeroApolice: "AP-09876", averbacoes: ["AV-123"] }],
             children: [
                 { name: 'responsavel', type: 'integer', required: true, description: 'Responsável pelo seguro (1-Emitente, 2-Contratante).' },
                 { name: 'cnpjSeguradora', type: 'string', description: 'CNPJ da seguradora.' },
@@ -792,8 +853,8 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'object',
             description: 'Totais do MDFe.',
             children: [
-                { name: 'valorCarga', type: 'number', required: true, description: 'Valor total da carga/mercadorias.' },
-                { name: 'quantidadeCarga', type: 'number', required: true, description: 'Peso bruto total da carga em KG.' },
+                { name: 'valorCarga', type: 'number', required: true, description: 'Valor total da carga/mercadorias.', defaultValue: 15000.75 },
+                { name: 'quantidadeCarga', type: 'number', required: true, description: 'Peso bruto total da carga em KG.', defaultValue: 5000 },
             ]
           }
         ]
@@ -849,24 +910,24 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'cpfCnpj', type: 'string', required: true, description: 'CNPJ da empresa.' },
-          { name: 'razaoSocial', type: 'string', required: true, description: 'Razão Social.' },
-          { name: 'nomeFantasia', type: 'string', description: 'Nome Fantasia.' },
-          { name: 'inscricaoEstadual', type: 'string', description: 'Inscrição Estadual (IE).' },
-          { name: 'inscricaoMunicipal', type: 'string', description: 'Inscrição Municipal (IM).' },
-          { name: 'regimeTributario', type: 'integer', description: 'Regime Tributário (1-Simples Nacional, 3-Regime Normal).' },
-          { name: 'email', type: 'string', description: 'Email da empresa.' },
+          { name: 'cpfCnpj', type: 'string', required: true, description: 'CNPJ da empresa.', defaultValue: '00000000000191' },
+          { name: 'razaoSocial', type: 'string', required: true, description: 'Razão Social.', defaultValue: 'EMPRESA DE TESTE LTDA' },
+          { name: 'nomeFantasia', type: 'string', description: 'Nome Fantasia.', defaultValue: 'NOME FANTASIA TESTE' },
+          { name: 'inscricaoEstadual', type: 'string', description: 'Inscrição Estadual (IE).', defaultValue: '123456789' },
+          { name: 'inscricaoMunicipal', type: 'string', description: 'Inscrição Municipal (IM).', defaultValue: '987654' },
+          { name: 'regimeTributario', type: 'integer', description: 'Regime Tributário (1-Simples Nacional, 3-Regime Normal).', defaultValue: 1 },
+          { name: 'email', type: 'string', description: 'Email da empresa.', defaultValue: 'contato@empresa.com' },
           {
             name: 'endereco',
             type: 'object',
             required: true,
             description: 'Endereço da empresa.',
             children: [
-              { name: 'logradouro', type: 'string', required: true, description: 'Nome da rua, avenida, etc.' },
-              { name: 'numero', type: 'string', required: true, description: 'Número do imóvel.' },
-              { name: 'bairro', type: 'string', required: true, description: 'Bairro.' },
-              { name: 'codigoCidade', type: 'string', required: true, description: 'Código IBGE do município.'},
-              { name: 'cep', type: 'string', required: true, description: 'CEP.' },
+              { name: 'logradouro', type: 'string', required: true, description: 'Nome da rua, avenida, etc.', defaultValue: 'AVENIDA TESTE' },
+              { name: 'numero', type: 'string', required: true, description: 'Número do imóvel.', defaultValue: '123' },
+              { name: 'bairro', type: 'string', required: true, description: 'Bairro.', defaultValue: 'CENTRO' },
+              { name: 'codigoCidade', type: 'string', required: true, description: 'Código IBGE do município.', defaultValue: '4115200' },
+              { name: 'cep', type: 'string', required: true, description: 'CEP.', defaultValue: '87000000' },
             ],
           },
         ]
@@ -1059,15 +1120,15 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'idIntegracao', type: 'string', description: 'ID de integração para referência.'},
-          { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.' },
+          { name: 'idIntegracao', type: 'string', description: 'ID de integração para referência.', defaultValue: 'serv-abc-123' },
+          { name: 'ambiente', type: 'integer', description: 'Tipo de ambiente (1-Produção, 2-Homologação). Padrão: 2.', defaultValue: 2 },
           {
             name: 'prestador',
             type: 'object',
             required: true,
             description: 'Dados do prestador do serviço (empresa emitente).',
             children: [
-              { name: 'cpfCnpj', type: 'string', required: true, description: 'CNPJ do prestador.' },
+              { name: 'cpfCnpj', type: 'string', required: true, description: 'CNPJ do prestador.', defaultValue: '00000000000191' },
             ],
           },
           {
@@ -1076,22 +1137,22 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             required: true,
             description: 'Dados do tomador do serviço (cliente).',
             children: [
-              { name: 'cpfCnpj', type: 'string', required: true, description: 'CPF ou CNPJ do tomador.' },
-              { name: 'razaoSocial', type: 'string', required: true, description: 'Razão Social ou Nome do tomador.' },
-              { name: 'inscricaoMunicipal', type: 'string', description: 'Inscrição Municipal do tomador.' },
-              { name: 'email', type: 'string', description: 'E-mail do tomador.' },
+              { name: 'cpfCnpj', type: 'string', required: true, description: 'CPF ou CNPJ do tomador.', defaultValue: '12345678000199' },
+              { name: 'razaoSocial', type: 'string', required: true, description: 'Razão Social ou Nome do tomador.', defaultValue: 'CLIENTE DE SERVICO LTDA' },
+              { name: 'inscricaoMunicipal', type: 'string', description: 'Inscrição Municipal do tomador.', defaultValue: '' },
+              { name: 'email', type: 'string', description: 'E-mail do tomador.', defaultValue: 'cliente@email.com' },
               {
                 name: 'endereco',
                 type: 'object',
                 required: true,
                 description: 'Endereço do tomador.',
                  children: [
-                  { name: 'logradouro', type: 'string', required: true, description: 'Nome da rua, avenida, etc.' },
-                  { name: 'numero', type: 'string', required: true, description: 'Número do imóvel.' },
-                  { name: 'bairro', type: 'string', required: true, description: 'Bairro.' },
-                  { name: 'codigoCidade', type: 'string', required: true, description: 'Código IBGE do município.'},
-                  { name: 'uf', type: 'string', required: true, description: 'UF.' },
-                  { name: 'cep', type: 'string', required: true, description: 'CEP.' },
+                  { name: 'logradouro', type: 'string', required: true, description: 'Nome da rua, avenida, etc.', defaultValue: 'RUA DO CLIENTE' },
+                  { name: 'numero', type: 'string', required: true, description: 'Número do imóvel.', defaultValue: '987' },
+                  { name: 'bairro', type: 'string', required: true, description: 'Bairro.', defaultValue: 'BAIRRO NOVO' },
+                  { name: 'codigoCidade', type: 'string', required: true, description: 'Código IBGE do município.', defaultValue: '4115200' },
+                  { name: 'uf', type: 'string', required: true, description: 'UF.', defaultValue: 'PR' },
+                  { name: 'cep', type: 'string', required: true, description: 'CEP.', defaultValue: '87010000' },
                 ],
               }
             ],
@@ -1101,6 +1162,18 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
             type: 'array',
             required: true,
             description: 'Lista de serviços prestados.',
+            defaultValue: [{
+                codigo: "14.01",
+                codigoTributacao: "1401",
+                discriminacao: "Serviços de desenvolvimento de software.",
+                cnae: "6201501",
+                valor: 1500.00,
+                iss: {
+                    aliquota: 5,
+                    retido: false,
+                    exigibilidade: 1
+                }
+            }],
             children: [
               { name: 'codigo', type: 'string', description: 'Código do serviço (varia por município).' },
               { name: 'codigoTributacao', type: 'string', description: 'Código de tributação do município.' },
@@ -1185,10 +1258,10 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
         type: 'application/json',
         description: '',
         children: [
-          { name: 'url', type: 'string', required: true, description: 'URL (HTTPS) para a qual as notificações serão enviadas.' },
-          { name: 'eventos', type: 'array[string]', required: true, description: 'Lista de eventos a serem notificados (ex: `nfe.autorizada`, `nfe.cancelada`, `nfse.rejeitada`).' },
-          { name: 'headers', type: 'object', description: 'Objeto com cabeçalhos customizados a serem enviados na requisição do webhook (ex: para autenticação).'},
-          { name: 'ativo', type: 'boolean', description: 'Indica se o webhook está ativo. Padrão: `true`.'}
+          { name: 'url', type: 'string', required: true, description: 'URL (HTTPS) para a qual as notificações serão enviadas.', defaultValue: 'https://meusistema.com/webhook/plugnotas' },
+          { name: 'eventos', type: 'array[string]', required: true, description: 'Lista de eventos a serem notificados (ex: `nfe.autorizada`, `nfe.cancelada`, `nfse.rejeitada`).', defaultValue: '["nfe.autorizada", "nfe.cancelada", "nfe.rejeitada"]' },
+          { name: 'headers', type: 'object', description: 'Objeto com cabeçalhos customizados a serem enviados na requisição do webhook (ex: para autenticação).', defaultValue: { Authorization: "Bearer SEU_TOKEN_SECRETO" }},
+          { name: 'ativo', type: 'boolean', description: 'Indica se o webhook está ativo. Padrão: `true`.', defaultValue: true}
         ]
       },
     ],
@@ -1306,106 +1379,31 @@ export const API_CONTENT_DATA: { [key: string]: ApiEndpointDetails } = {
   },
 };
 
-
 export const CODE_SNIPPETS_DATA: { [key: string]: CodeExample[] } = {
   addNFe: [
     {
       language: 'cURL',
-      code: `curl --location --request POST 'https://api.plugnotas.com.br/nfe' \\
+      code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/nfe' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "idIntegracao": "XXXYY999",
-  "presenca": 1,
-  "naturezaOperacao": "VENDA DE MERCADORIAS",
-  "tipo": 1,
-  "finalidade": 1,
-  "destinatario": {
-    "cpfCnpj": "00000000000000",
-    "nome": "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL",
-    "indicadorInscricaoEstadual": 9,
-    "endereco": {
-        "logradouro": "AVENIDA TESTE",
-        "numero": "1234",
-        "bairro": "CENTRO",
-        "codigoCidade": "4115200",
-        "cidade": "MARINGA",
-        "uf": "PR",
-        "cep": "87000000"
-    }
-  },
-  "itens": [
-    {
-      "numero": 1,
-      "codigo": "001",
-      "descricao": "PRODUTO TESTE COM IMPOSTOS",
-      "ncm": "22030000",
-      "cfop": "5102",
-      "unidade": "UN",
-      "quantidade": 1,
-      "valor": 10.50,
-      "impostos": {
-          "icms": {
-              "situacaoTributaria": "102",
-              "origem": 0
-          },
-          "pis": {
-              "situacaoTributaria": "07"
-          },
-          "cofins": {
-              "situacaoTributaria": "07"
-          }
-      }
-    }
-  ],
-  "pagamentos": [
-      {
-          "forma": "01",
-          "valor": 10.50
-      }
-  ],
-  "transporte": {
-      "modalidadeFrete": 9
-  }
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
     },
     {
       language: 'C#',
-      code: `var client = new RestClient("https://api.plugnotas.com.br/nfe");
+      code: (body) => `var client = new RestClient("https://api.plugnotas.com.br/nfe");
 var request = new RestRequest(Method.POST);
 request.AddHeader("x-api-key", "SEU_TOKEN");
 request.AddHeader("Content-Type", "application/json");
-var body = @"{
-  ""idIntegracao"": ""XXXYY999"",
-  ""presenca"": 1,
-  ""naturezaOperacao"": ""VENDA DE MERCADORIAS"",
-  ""destinatario"": {
-    ""cpfCnpj"": ""00000000000000"",
-    ""nome"": ""NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL"",
-    ""indicadorInscricaoEstadual"": 9
-  },
-  ""itens"": [
-    {
-      ""numero"": 1,
-      ""codigo"": ""001"",
-      ""descricao"": ""PRODUTO TESTE"",
-      ""ncm"": ""22030000"",
-      ""cfop"": ""5102"",
-      ""unidade"": ""UN"",
-      ""quantidade"": 1,
-      ""valor"": 10.50
-    }
-  ]
-}";
+var body = @"${JSON.stringify(body, null, 2).replace(/"/g, '""')}";
 request.AddParameter("application/json", body, ParameterType.RequestBody);
 IRestResponse response = client.Execute(request);`
     },
     {
       language: 'Java',
-      code: `OkHttpClient client = new OkHttpClient();
+      code: (body) => `OkHttpClient client = new OkHttpClient();
 
 MediaType mediaType = MediaType.parse("application/json");
-RequestBody body = RequestBody.create(mediaType, "{\\n    \\"idIntegracao\\": \\"XXXYY999\\",\\n    \\"presenca\\": 1,\\n    \\"naturezaOperacao\\": \\"VENDA DE MERCADORIAS\\",\\n    \\"destinatario\\": {\\n        \\"cpfCnpj\\": \\"00000000000000\\",\\n        \\"nome\\": \\"NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL\\",\\n        \\"indicadorInscricaoEstadual\\": 9\\n    },\\n    \\"itens\\": [\\n        {\\n            \\"numero\\": 1,\\n            \\"codigo\\": \\"001\\",\\n            \\"descricao\\": \\"PRODUTO TESTE\\",\\n            \\"ncm\\": \\"22030000\\",\\n            \\"cfop\\": \\"5102\\",\\n            \\"unidade\\": \\"UN\\",\\n            \\"quantidade\\": 1,\\n            \\"valor\\": 10.50\\n        }\\n    ]\\n}");
+RequestBody body = RequestBody.create(mediaType, ${JSON.stringify(JSON.stringify(body))});
 Request request = new Request.Builder()
   .url("https://api.plugnotas.com.br/nfe")
   .post(body)
@@ -1419,12 +1417,12 @@ Response response = client.newCall(request).execute();`
   consultarNFe: [
     {
         language: 'cURL',
-        code: `curl --location --request GET 'https://api.plugnotas.com.br/nfe/ID_DA_NOTA' \\
+        code: () => `curl --location --request GET 'https://api.plugnotas.com.br/nfe/ID_DA_NOTA' \\
 --header 'x-api-key: SEU_TOKEN'`
     },
     {
         language: 'JavaScript',
-        code: `fetch('https://api.plugnotas.com.br/nfe/ID_DA_NOTA', {
+        code: () => `fetch('https://api.plugnotas.com.br/nfe/ID_DA_NOTA', {
   method: 'GET',
   headers: {
     'x-api-key': 'SEU_TOKEN'
@@ -1437,23 +1435,19 @@ Response response = client.newCall(request).execute();`
   cancelarNFe: [
      {
       language: 'cURL',
-      code: `curl --location --request POST 'https://api.plugnotas.com.br/nfe/ID_DA_NOTA/cancelar' \\
+      code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/nfe/ID_DA_NOTA/cancelar' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "motivo": "Desistência da compra pelo cliente."
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
     },
     {
         language: 'Python',
-        code: `import requests
+        code: (body) => `import requests
 import json
 
 url = "https://api.plugnotas.com.br/nfe/ID_DA_NOTA/cancelar"
 
-payload = json.dumps({
-  "motivo": "Desistência da compra pelo cliente."
-})
+payload = json.dumps(${JSON.stringify(body, null, 2)})
 headers = {
   'x-api-key': 'SEU_TOKEN',
   'Content-Type': 'application/json'
@@ -1467,176 +1461,75 @@ print(response.text)`
   inutilizarNFe: [
     {
      language: 'cURL',
-     code: `curl --location --request POST 'https://api.plugnotas.com.br/nfe/inutilizar' \\
+     code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/nfe/inutilizar' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "numeroInicial": 100,
-  "numeroFinal": 105,
-  "serie": 1,
-  "justificativa": "Falha na sequência de numeração da nota fiscal."
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
    },
   ],
   corrigirNFe: [
     {
      language: 'cURL',
-     code: `curl --location --request POST 'https://api.plugnotas.com.br/nfe/ID_DA_NOTA/cce' \\
+     code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/nfe/ID_DA_NOTA/cce' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "correcao": "O endereço correto do destinatário é Rua Exemplo, Nº 123."
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
    },
   ],
   enviarEmailNFe: [
     {
      language: 'cURL',
-     code: `curl --location --request POST 'https://api.plugnotas.com.br/nfe/ID_DA_NOTA/email' \\
+     code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/nfe/ID_DA_NOTA/email' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "emails": [
-    "cliente1@email.com"
-  ],
-  "copia": [
-    "contador@email.com"
-  ],
-  "assunto": "Sua Nota Fiscal Eletrônica Chegou!",
-  "mensagem": "<h1>Olá!</h1><p>Segue em anexo o XML e o DANFE de sua nota fiscal. Obrigado!</p>"
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
    },
   ],
   addNFCe: [
     {
       language: 'cURL',
-      code: `curl --location --request POST 'https://api.plugnotas.com.br/nfce' \\
+      code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/nfce' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "idIntegracao": "PEDIDO123",
-  "presenca": 1,
-  "destinatario": {
-      "cpfCnpj": "12345678900"
-  },
-  "pagamentos": [{
-    "forma": "03",
-    "valor": 50.00,
-    "bandeira": "01",
-    "cnpjCredenciadora": "12345678000199"
-  }],
-  "itens": [
-    {
-      "codigo": "P001",
-      "descricao": "PRODUTO 1 NFC-E",
-      "ncm": "22021000",
-      "cfop": "5102",
-      "unidade": "UN",
-      "quantidade": 2,
-      "valor": 25.00,
-      "valorDesconto": 0
-    }
-  ],
-  "valorFrete": 0,
-  "valorDesconto": 0
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
     }
   ],
   addMDFe: [
      {
       language: 'cURL',
-      code: `curl --location --request POST 'https://api.plugnotas.com.br/mdfe' \\
+      code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/mdfe' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-    "idIntegracao": "mdfe-001",
-    "emitente": {
-        "cpfCnpj": "00000000000191"
-    },
-    "tipoEmitente": 1,
-    "tipoTransportador": 1,
-    "modelo": 58,
-    "serie": 1,
-    "numero": 150,
-    "ufInicio": "PR",
-    "ufFim": "SC",
-    "municipioCarregamento": [
-        {
-            "codigo": "4115200"
-        }
-    ],
-    "veiculoTracao": {
-        "placa": "ABC1234",
-        "tara": 4000,
-        "uf": "PR",
-        "rntrc": "12345678"
-    },
-    "condutor": [
-        {
-            "nome": "JOAO DA SILVA",
-            "cpf": "12345678901"
-        }
-    ],
-    "documentos": [
-      {
-        "chaveNFe": "41000000000000000000000000000000000000000001"
-      }
-    ],
-    "seguro": [
-        {
-            "responsavel": 1,
-            "nomeSeguradora": "SEGURADORA TESTE S.A.",
-            "numeroApolice": "AP-09876"
-        }
-    ],
-    "totais": {
-        "valorCarga": 15000.75,
-        "quantidadeCarga": 5000
-    }
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
     },
   ],
   addEmpresa: [
     {
       language: 'cURL',
-      code: `curl --location --request POST 'https://api.plugnotas.com.br/empresa' \\
+      code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/empresa' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "cpfCnpj": "00000000000191",
-  "razaoSocial": "EMPRESA DE TESTE LTDA",
-  "nomeFantasia": "NOME FANTASIA TESTE",
-  "inscricaoEstadual": "123456789",
-  "regimeTributario": 1,
-  "email": "contato@empresa.com",
-  "endereco": {
-    "logradouro": "AVENIDA TESTE",
-    "numero": "123",
-    "bairro": "CENTRO",
-    "codigoCidade": "4115200",
-    "cep": "87000000"
-  }
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
     }
   ],
   consultarEmpresa: [
     {
       language: 'cURL',
-      code: `curl --location --request GET 'https://api.plugnotas.com.br/empresa/00000000000191' \\
+      code: () => `curl --location --request GET 'https://api.plugnotas.com.br/empresa/00000000000191' \\
 --header 'x-api-key: SEU_TOKEN'`
     }
   ],
   listarEmpresas: [
     {
       language: 'cURL',
-      code: `curl --location --request GET 'https://api.plugnotas.com.br/empresa?pagina=1&limite=10' \\
+      code: () => `curl --location --request GET 'https://api.plugnotas.com.br/empresa?pagina=1&limite=10' \\
 --header 'x-api-key: SEU_TOKEN'`
     }
   ],
   addCertificado: [
     {
       language: 'cURL',
-      code: `curl --location --request POST 'https://api.plugnotas.com.br/certificado' \\
+      code: () => `curl --location --request POST 'https://api.plugnotas.com.br/certificado' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --form 'arquivo=@"/caminho/para/seu/certificado.pfx"' \\
 --form 'senha="SUA_SENHA"' \\
@@ -1646,102 +1539,87 @@ print(response.text)`
   consultarCertificado: [
     {
       language: 'cURL',
-      code: `curl --location --request GET 'https://api.plugnotas.com.br/certificado/00000000000191' \\
+      code: () => `curl --location --request GET 'https://api.plugnotas.com.br/certificado/00000000000191' \\
 --header 'x-api-key: SEU_TOKEN'`
     }
   ],
   listarCertificados: [
     {
       language: 'cURL',
-      code: `curl --location --request GET 'https://api.plugnotas.com.br/certificado' \\
+      code: () => `curl --location --request GET 'https://api.plugnotas.com.br/certificado' \\
 --header 'x-api-key: SEU_TOKEN'`
     }
   ],
   addNFSe: [
     {
       language: 'cURL',
-      code: `curl --location --request POST 'https://api.plugnotas.com.br/nfse' \\
+      code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/nfse' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "idIntegracao": "serv-abc-123",
-  "prestador": {
-    "cpfCnpj": "00000000000191"
-  },
-  "tomador": {
-    "cpfCnpj": "12345678000199",
-    "razaoSocial": "CLIENTE DE SERVICO LTDA",
-    "email": "cliente@email.com",
-    "endereco": {
-      "logradouro": "RUA DO CLIENTE",
-      "numero": "987",
-      "bairro": "BAIRRO NOVO",
-      "codigoCidade": "4115200",
-      "uf": "PR",
-      "cep": "87010000"
-    }
-  },
-  "servico": [
-    {
-      "codigo": "14.01",
-      "discriminacao": "Serviços de desenvolvimento de software.",
-      "valor": 1500.00,
-      "iss": {
-        "aliquota": 5,
-        "retido": false,
-        "exigibilidade": 1
-      }
-    }
-  ]
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
     }
   ],
   consultarNFSe: [
     {
       language: 'cURL',
-      code: `curl --location --request GET 'https://api.plugnotas.com.br/nfse/ID_DA_NFSE' \\
+      code: () => `curl --location --request GET 'https://api.plugnotas.com.br/nfse/ID_DA_NFSE' \\
 --header 'x-api-key: SEU_TOKEN'`
     }
   ],
   addWebhook: [
     {
       language: 'cURL',
-      code: `curl --location --request POST 'https://api.plugnotas.com.br/webhook' \\
+      code: (body) => `curl --location --request POST 'https://api.plugnotas.com.br/webhook' \\
 --header 'x-api-key: SEU_TOKEN' \\
 --header 'Content-Type: application/json' \\
---data-raw '{
-  "url": "https://meusistema.com/webhook/plugnotas",
-  "eventos": [
-    "nfe.autorizada",
-    "nfe.cancelada",
-    "nfe.rejeitada"
-  ],
-  "headers": {
-    "Authorization": "Bearer SEU_TOKEN_SECRETO"
-  },
-  "ativo": true
-}'`
+--data-raw '${JSON.stringify(body, null, 2)}'`
     }
   ],
   listarWebhooks: [
     {
       language: 'cURL',
-      code: `curl --location --request GET 'https://api.plugnotas.com.br/webhook' \\
+      code: () => `curl --location --request GET 'https://api.plugnotas.com.br/webhook' \\
 --header 'x-api-key: SEU_TOKEN'`
     }
   ],
   consultarWebhook: [
     {
       language: 'cURL',
-      code: `curl --location --request GET 'https://api.plugnotas.com.br/webhook/ID_DO_WEBHOOK' \\
+      code: () => `curl --location --request GET 'https://api.plugnotas.com.br/webhook/ID_DO_WEBHOOK' \\
 --header 'x-api-key: SEU_TOKEN'`
     }
   ],
   deletarWebhook: [
     {
       language: 'cURL',
-      code: `curl --location --request DELETE 'https://api.plugnotas.com.br/webhook/ID_DO_WEBHOOK' \\
+      code: () => `curl --location --request DELETE 'https://api.plugnotas.com.br/webhook/ID_DO_WEBHOOK' \\
 --header 'x-api-key: SEU_TOKEN'`
     }
   ]
+};
+
+export const generateInitialBody = (params: Parameter[]): any => {
+  const body: any = {};
+  params.forEach(param => {
+    if (param.children) {
+      if (param.type === 'array') {
+        body[param.name] = param.defaultValue !== undefined ? param.defaultValue : [];
+      } else { // object
+        body[param.name] = generateInitialBody(param.children);
+      }
+    } else {
+      // Handle cases like array of strings
+      if (param.type.includes('array')) {
+         try {
+            // Attempt to parse stringified array for default value
+            body[param.name] = param.defaultValue !== undefined ? JSON.parse(param.defaultValue) : [];
+         } catch(e) {
+            body[param.name] = [];
+         }
+      } else {
+         body[param.name] = param.defaultValue !== undefined ? param.defaultValue : '';
+      }
+    }
+  });
+  return body;
 };

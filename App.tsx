@@ -1,17 +1,27 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import CodeSnippets from './components/CodeSnippets';
 import Header from './components/Header';
-import { API_CONTENT_DATA, CODE_SNIPPETS_DATA, SIDEBAR_DATA } from './constants';
+import { API_CONTENT_DATA, CODE_SNIPPETS_DATA, SIDEBAR_DATA, generateInitialBody } from './constants';
 import type { ApiEndpointDetails, CodeExample, NavItem } from './types';
 
 const App: React.FC = () => {
   const [activeEndpointId, setActiveEndpointId] = useState<string>('addNFe');
   const [searchTerm, setSearchTerm] = useState('');
+  const [requestBody, setRequestBody] = useState<any>({});
 
   const activeContent: ApiEndpointDetails = API_CONTENT_DATA[activeEndpointId] || API_CONTENT_DATA['addNFe'];
   const activeSnippets: CodeExample[] = CODE_SNIPPETS_DATA[activeEndpointId] || CODE_SNIPPETS_DATA['addNFe'];
+
+  useEffect(() => {
+    const bodyParams = activeContent.parameters.find(p => p.name === 'Body');
+    if (bodyParams && bodyParams.children) {
+      setRequestBody(generateInitialBody(bodyParams.children));
+    } else {
+      setRequestBody({});
+    }
+  }, [activeEndpointId, activeContent.parameters]);
 
   const filteredSidebarData = useMemo(() => {
     if (!searchTerm.trim()) {
@@ -54,8 +64,16 @@ const App: React.FC = () => {
           setSearchTerm={setSearchTerm}
         />
         <div className="flex flex-1 overflow-hidden">
-          <MainContent content={activeContent} />
-          <CodeSnippets snippets={activeSnippets} />
+          <MainContent 
+            key={activeEndpointId} // Add key to force re-mount and reset state on endpoint change
+            content={activeContent} 
+            requestBody={requestBody}
+            onBodyChange={setRequestBody}
+          />
+          <CodeSnippets 
+            snippets={activeSnippets}
+            requestBody={requestBody}
+          />
         </div>
       </div>
     </div>

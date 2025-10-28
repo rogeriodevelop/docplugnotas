@@ -10,6 +10,7 @@ export interface Parameter {
   required?: boolean;
   description: string;
   children?: Parameter[];
+  defaultValue?: any;
 }
 
 export interface ResponseItem {
@@ -32,5 +33,5 @@ export interface ApiEndpointDetails {
 
 export interface CodeExample {
   language: string;
-  code: string;
+  code: (body: any) => string;
 }

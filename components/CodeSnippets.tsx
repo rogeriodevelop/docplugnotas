@@ -4,9 +4,10 @@ import { CopyIcon, CheckIcon, ChevronDownIcon } from './icons/Icons';
 
 interface CodeSnippetsProps {
   snippets: CodeExample[];
+  requestBody: any;
 }
 
-const CodeSnippets: React.FC<CodeSnippetsProps> = ({ snippets }) => {
+const CodeSnippets: React.FC<CodeSnippetsProps> = ({ snippets, requestBody }) => {
   const [activeLang, setActiveLang] = useState(snippets[0]?.language || '');
   const [copied, setCopied] = useState(false);
 
@@ -20,10 +21,13 @@ const CodeSnippets: React.FC<CodeSnippetsProps> = ({ snippets }) => {
   }, [snippets, activeLang]);
 
   const activeSnippet = snippets.find(s => s.language === activeLang);
+  
+  // Generate the code string by calling the function
+  const codeToShow = activeSnippet ? activeSnippet.code(requestBody) : '';
 
   const handleCopy = () => {
-    if (activeSnippet) {
-      navigator.clipboard.writeText(activeSnippet.code);
+    if (codeToShow) {
+      navigator.clipboard.writeText(codeToShow);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -65,7 +69,7 @@ const CodeSnippets: React.FC<CodeSnippetsProps> = ({ snippets }) => {
       <div className="flex-1 p-4 overflow-y-auto text-sm leading-6">
         <pre>
           <code>
-            {activeSnippet?.code}
+            {codeToShow}
           </code>
         </pre>
       </div>
